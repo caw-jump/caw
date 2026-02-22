@@ -1,0 +1,39 @@
+<%
+  const tagline = footer?.tagline || 'The Unicorn Developer.';
+  const copyrightName = footer?.copyright || siteName || 'Chris Amaya';
+  const year = new Date().getFullYear();
+  const MAIN = 'https://jumpstartscaling.com';
+%>
+<footer>
+  <div class="container">
+    <div class="grid gap-8 mb-12" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+      <div>
+        <a href="/" class="flex items-center gap-3 mb-6">
+          <div style="width:40px;height:40px;background:#00FF94;border-radius:0.25rem;display:flex;align-items:center;justify-content:center;color:#000">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <span class="font-bold text-xl" style="color:#fff">Chris <span style="color:#00FF94">Amaya</span></span>
+        </a>
+        <p class="text-sm" style="color:rgba(255,255,255,0.4)"><%= tagline %></p>
+      </div>
+      <div>
+        <h4 class="text-xs font-mono uppercase mb-4" style="color:rgba(232,198,119,0.8)">Resources</h4>
+        <ul class="space-y-2 text-sm" style="color:rgba(255,255,255,0.5)">
+          <li><a href="<%= MAIN %>/audit" class="hover:opacity-100" style="color:inherit">Moat Audit</a></li>
+          <li><a href="<%= MAIN %>/resources/calculators" class="hover:opacity-100" style="color:inherit">Calculators</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-xs font-mono uppercase mb-4" style="color:rgba(232,198,119,0.8)">Direct</h4>
+        <a href="mailto:hello@jumpstartscaling.com" class="hover:opacity-80" style="color:#fff">hello@jumpstartscaling.com</a>
+      </div>
+    </div>
+    <div style="padding-top:2rem;border-top:1px solid rgba(255,255,255,0.05);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem">
+      <p class="text-xs" style="color:rgba(255,255,255,0.3)">&copy; <%= year %> <%= copyrightName %>. All rights reserved.</p>
+      <div class="flex gap-8 text-xs" style="color:rgba(255,255,255,0.3)">
+        <a href="<%= MAIN %>/terms" class="hover:opacity-100" style="color:inherit">Terms</a>
+        <a href="<%= MAIN %>/privacy" class="hover:opacity-100" style="color:inherit">Privacy</a>
+      </div>
+    </div>
+  </div>
+</footer>

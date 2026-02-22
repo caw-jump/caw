@@ -3,7 +3,9 @@
   "type": "module",
   "version": "0.1.0",
   "scripts": {
-    "dev": "astro dev --port 4321 --host",
+    "start": "node server/index.mjs",
+    "dev": "node --watch server/index.mjs",
+    "dev:astro": "astro dev --port 4321 --host",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
@@ -11,6 +13,11 @@
     "db:seed": "node scripts/seed-chrisamaya.mjs"
   },
   "dependencies": {
+    "@fastify/static": "^9.0.0",
+    "@fastify/view": "^10.0.1",
+    "ejs": "^3.1.10",
+    "fastify": "^5.1.0",
+    "pg": "^8.13.1",
     "@astrojs/check": "^0.9.6",
     "@astrojs/mdx": "^4.3.13",
     "@astrojs/node": "^9.5.4",
@@ -33,7 +40,6 @@
     "framer-motion": "^12.25.0",
     "lucide-react": "^0.562.0",
     "maath": "^0.10.8",
-    "pg": "^8.13.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.3",
     "react-rough-notation": "^1.0.8",

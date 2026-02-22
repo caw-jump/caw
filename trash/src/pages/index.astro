@@ -1,0 +1,54 @@
+---
+// DB-driven homepage - caw_content
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BlockRenderer from '../components/BlockRenderer.astro';
+import { getPageData } from '../lib/dbLoader';
+
+const pageData = await getPageData('');
+const themeConfig = (Astro.locals.themeConfig as Record<string, unknown>) || {};
+const siteName = (themeConfig.site_name as string) || 'Chris Amaya';
+
+if (!pageData) Astro.response.status = 404;
+---
+
+{pageData ? (
+  <BaseLayout
+    title={pageData.page.title || 'The One-Stop Architect | Chris Amaya'}
+    description="Stop hiring freelancers. Start building an empire. The 'Unicorn Developer' who builds full-stack applications, engineers private AI systems, and automates your entire backend."
+    palette={pageData.palette as 'gold' | 'emerald' | 'sapphire'}
+    fluid={true}
+    siteName={siteName}
+    nav={pageData.nav as { portfolio?: { name: string; href: string }[]; cta?: { label: string; href: string } }}
+    footer={pageData.footer as { tagline?: string; copyright?: string }}
+    localSeo={pageData.local_seo as { person?: Record<string, unknown>; service?: Record<string, unknown>; address?: { locality?: string; region?: string; postalCode?: string }; areaServed?: string } | undefined}
+    debug={{ source: 'db', blockCount: pageData.blocks.length, pageSlug: pageData.page?.slug ?? '', palette: pageData.palette }}
+  >
+    <style>
+      .architect-section { background-color: #050505; color: #fff; }
+      .text-architect { color: #00FF94; }
+      .border-architect { border-color: rgba(0,255,148,0.3); }
+      .bg-architect-dim { background-color: rgba(0,255,148,0.05); }
+      .card-custom { background-color: #0F0F0F; border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 2rem; transition: border-color 0.3s ease; }
+      .card-custom:hover { border-color: rgba(0,255,148,0.5); }
+      .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
+    <BlockRenderer blocks={pageData.blocks} />
+  </BaseLayout>
+) : (
+  <BaseLayout title="Page Not Found" description="The page you requested could not be found." debug={{ source: 'fallback', error: 'Page not found' }}>
+    <section class="notfound">
+      <h1 class="notfound-code"><span class="gradient-text">404</span></h1>
+      <h2 class="notfound-title">Page Not Found</h2>
+      <p class="notfound-text">The page you are looking for does not exist or has been moved.</p>
+      <a href="/" class="notfound-btn">Return Home →</a>
+    </section>
+    <style>
+      .notfound{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:2rem 1.5rem}
+      .notfound-code{font-size:clamp(6rem,15vw,12rem);font-weight:900;line-height:1;margin:0}
+      .notfound-title{font-size:1.5rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--text-primary)}
+      .notfound-text{color:var(--text-secondary);margin:0 0 2rem;font-size:1.05rem}
+      .notfound-btn{display:inline-block;padding:0.85rem 2rem;background:var(--gradient-accent);color:#050505;font-weight:700;font-size:1rem;border-radius:0.75rem;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s}
+      .notfound-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,255,148,0.3)}
+    </style>
+  </BaseLayout>
+)}

@@ -1,22 +1,20 @@
-# chrisamaya.work — Standalone Astro Shell
+# chrisamaya.work — Fastify SSR (no build)
 
-Astro thin shell for chrisamaya.work. All content from Postgres. No factory, no god-mode API.
+DB-driven SSR. Fastify + EJS + pg. No build step; templates rendered at request time.
 
 ## Architecture
 
-- **Pages, blocks, nav, footer** → Direct Postgres (`caw_seed`, `caw_content` — minimal schema)
-- **Forms** → POST `/api/submit-lead` → INSERT `leads` (uses same DB as god-mode)
-- **DATABASE_URL** — Same Postgres as god-mode-api. No new DB; no localhost by default.
+- **Pages, blocks, nav, footer** → Direct Postgres (`caw_content`)
+- **Forms** → POST `/api/submit-lead` → INSERT `leads`
+- **DATABASE_URL** — Same Postgres as god-mode-api.
 
 ## Quick Start
 
 ```bash
 cp .env.example .env
-# Set DATABASE_URL (copy from Coolify → god-mode-api → env, or use the same value)
-# Format: postgresql://postgres:PASSWORD@lo80k4ccg04wsw0okw0gcs0o:5432/postgres?sslmode=require
+# Set DATABASE_URL (copy from Coolify → god-mode-api → env)
 npm install
-npm run build
-npm run preview
+npm run dev   # or npm run start
 ```
 
 ## Seed

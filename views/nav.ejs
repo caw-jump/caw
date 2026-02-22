@@ -1,0 +1,52 @@
+<%
+  const portfolio = nav?.portfolio || [
+    { name: 'The Problem', href: '/#hook' },
+    { name: 'Architecture', href: '/#solution' },
+    { name: 'Blog', href: '/blog' },
+    { name: 'How I Build', href: '/guide/how-i-build' },
+    { name: 'Knowledge Base', href: '/knowledge-base' },
+    { name: 'Search', href: '/search' }
+  ];
+  const customApps = nav?.custom_apps || [];
+  const ctaLabel = nav?.cta?.label || 'INITIATE_HANDSHAKE';
+  const ctaHref = nav?.cta?.href || '#audit';
+  const JUMPSTART = 'https://jumpstartscaling.com';
+  const sitePart = (siteName || 'Chris Amaya').split(' ');
+  const first = sitePart[0] || '';
+  const rest = sitePart.slice(1).join(' ') || '';
+%>
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50 py-4" style="background:linear-gradient(to bottom,#1a1a1a,#000);border-bottom:1px solid rgba(255,255,255,0.05)">
+  <div class="container flex items-center justify-between">
+    <a href="/" class="flex items-center gap-3">
+      <div style="width:40px;height:40px;background:linear-gradient(135deg,#00FF94,#00BC6D);border-radius:0.5rem;display:flex;align-items:center;justify-content:center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <span class="font-bold text-xl hidden sm:inline"><%= first %><span style="color:#00FF94"><%= rest %></span></span>
+    </a>
+    <ul class="hidden lg:flex items-center gap-8 font-medium text-sm" style="color:rgba(255,255,255,0.9)">
+      <li><a href="/#hook" class="hover:opacity-80" style="color:inherit">The Problem</a></li>
+      <li><a href="/#solution" class="hover:opacity-80" style="color:inherit">Architecture</a></li>
+      <% portfolio.slice(2).forEach(function(item){ %>
+      <li><a href="<%= item.href %>" class="hover:opacity-80" style="color:inherit"><%= item.name %></a></li>
+      <% }); %>
+      <% if (customApps.length) { customApps.slice(0,4).forEach(function(item){ %>
+      <li><a href="<%= item.href %>" class="hover:opacity-80" style="color:inherit"><%= item.name %></a></li>
+      <% }); } %>
+      <li><a href="<%= ctaHref %>" class="px-6 py-2.5 font-bold text-sm uppercase rounded-lg" style="background:#00FF94;color:#050505"><%= ctaLabel %></a></li>
+    </ul>
+    <button id="mobile-menu-btn" aria-label="Menu" class="lg:hidden w-12 h-12 flex flex-col justify-center items-center gap-1.5">
+      <span style="width:24px;height:2px;background:#fff;display:block"></span>
+      <span style="width:24px;height:2px;background:#fff;display:block"></span>
+      <span style="width:24px;height:2px;background:#fff;display:block"></span>
+    </button>
+  </div>
+</nav>
+<div id="mobile-drawer" class="fixed inset-0 bg-[#0B0B0F] translate-x-full transition-transform duration-300 z-50 overflow-y-auto lg:hidden" aria-hidden="true" style="padding-top:6rem;padding-left:2rem">
+  <ul class="space-y-6">
+    <li><a href="/" class="text-2xl font-bold mobile-link" style="color:#fff">Home</a></li>
+    <% portfolio.forEach(function(item){ %>
+    <li><a href="<%= item.href %>" class="mobile-link block py-2" style="color:rgba(255,255,255,0.8)"><%= item.name %></a></li>
+    <% }); %>
+    <li><a href="<%= ctaHref %>" class="mobile-link block w-full text-center py-4 font-bold rounded-xl mt-8" style="background:#00FF94;color:#050505"><%= ctaLabel %></a></li>
+  </ul>
+</div>

@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
-<BaseLayout title="Page Not Found" description="The page you requested could not be found.">
+<BaseLayout title="Page Not Found" description="The page you requested could not be found." debug={{ source: 'fallback', error: 'Page not found' }}>
 <section class="notfound">
 <h1 class="notfound-code"><span class="gradient-text">404</span></h1>
 <h2 class="notfound-title">Page Not Found</h2>

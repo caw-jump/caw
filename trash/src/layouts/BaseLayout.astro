@@ -22,6 +22,8 @@ interface Props {
   nav?: { portfolio?: { name: string; href: string }[]; custom_apps?: { name: string; href: string }[]; cta?: { label: string; href: string } };
   /** From API: footer content */
   footer?: { tagline?: string; copyright?: string };
+  /** Debug: expose in console for DB/render verification */
+  debug?: { source: string; blockCount?: number; pageSlug?: string; palette?: string; error?: string };
   /** Optional Local SEO schema overrides from theme_config */
   localSeo?: {
     person?: Record<string, unknown>;
@@ -45,6 +47,7 @@ const {
   nav,
   footer: footerData,
   localSeo,
+  debug: debugProps,
 } = Astro.props;
 
 const siteUrl = Astro.site ? new URL(Astro.site).origin : 'https://chrisamaya.work';
@@ -148,6 +151,32 @@ graph.push(mainEntity);
 
     <!-- Particles Container -->
     <div class="particles fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
+
+    <!-- CAW debug: confirm DB load and render in console -->
+    {debugProps && (
+      <script is:inline define:vars={{ debugProps }}>
+        (function() {
+          const d = debugProps || {};
+          const obj = {
+            source: d.source || 'unknown',
+            blockCount: d.blockCount ?? null,
+            pageSlug: d.pageSlug ?? '',
+            palette: d.palette ?? '',
+            timestamp: new Date().toISOString(),
+            error: d.error || null
+          };
+          window.__CAW_DEBUG__ = obj;
+          const ok = obj.source === 'db' && (obj.blockCount === null || obj.blockCount >= 0);
+          console.log(
+            '%cCAW Render Check',
+            'background:#00FF94;color:#050505;font-weight:bold;padding:2px 8px;border-radius:4px;',
+            ok ? '✓ Rendered from DB' : (obj.error ? '✗ Error: ' + obj.error : '? Source: ' + obj.source),
+            '| slug=' + (obj.pageSlug || '/') + ' | blocks=' + (obj.blockCount ?? 'n/a') + ' | palette=' + obj.palette,
+            '\nFull object: window.__CAW_DEBUG__'
+          );
+        })();
+      </script>
+    )}
 
     <!-- Global Interaction Logic -->
     <script is:inline>
