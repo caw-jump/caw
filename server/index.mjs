@@ -72,15 +72,17 @@ fastify.post('/api/submit-lead', async (req, reply) => {
   }
 });
 
-// API: health
+// API: health — confirms DB control and whether caw_content is loaded
 fastify.get('/api/health', async () => {
+  const hasUrl = !!process.env.DATABASE_URL;
   const p = getPool();
-  if (!p) return { ok: false, error: 'DATABASE_URL not set' };
+  if (!p) return { ok: false, error: 'DATABASE_URL not set', db_controlled: true };
   try {
     const r = await p.query('SELECT COUNT(*)::int as n FROM caw_content');
-    return { ok: true, caw_content_rows: r.rows[0]?.n ?? 0 };
+    const n = r.rows[0]?.n ?? 0;
+    return { ok: true, db_controlled: true, caw_content_rows: n, content_loaded: n > 0 };
   } catch (e) {
-    return { ok: false, error: e.message };
+    return { ok: false, error: e.message, db_controlled: true };
   }
 });
 

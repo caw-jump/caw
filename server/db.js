@@ -5,10 +5,12 @@ let pool = null;
 export function getPool() {
   if (!process.env.DATABASE_URL) return null;
   if (!pool) {
-    const ssl = process.env.DATABASE_URL.includes('sslmode=require')
+    const url = process.env.DATABASE_URL;
+    // Cloud/Coolify Postgres: skip cert verify for TLS connections
+    const ssl = url.includes('sslmode=require') || url.includes('sslmode=no-verify') || !url.includes('127.0.0.1')
       ? { rejectUnauthorized: false }
       : false;
-    pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl });
+    pool = new pg.Pool({ connectionString: url, ssl });
   }
   return pool;
 }
