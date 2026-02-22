@@ -1,0 +1,41 @@
+---
+interface Step {
+  name: string;
+  text: string;
+  image?: string;
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  steps: Step[];
+  totalTime?: string;
+  estimatedCost?: string;
+}
+
+const { 
+  title, 
+  description, 
+  steps,
+  totalTime,
+  estimatedCost 
+} = Astro.props;
+
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": title,
+  "description": description || title,
+  "totalTime": totalTime,
+  "estimatedCost": estimatedCost,
+  "step": steps.map((step, index) => ({
+    "@type": "HowToStep",
+    "position": index + 1,
+    "name": step.name,
+    "text": step.text,
+    "image": step.image
+  }))
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(howToSchema, null, 2)} />

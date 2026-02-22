@@ -1,0 +1,12 @@
+---
+interface Props{title?:string}
+const{title}=Astro.props;
+---
+<div class="glass-card gc-section">
+{title&&<h2 class="gc-title"><span class="gradient-text">{title}</span></h2>}
+<div class="prose"><slot/></div>
+</div>
+<style>
+.gc-section{max-width:900px;margin:3rem auto}
+.gc-title{font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;margin:0 0 1.5rem;line-height:1.2}
+</style>

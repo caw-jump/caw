@@ -1,0 +1,22 @@
+---
+// Microsoft Clarity Analytics Component
+// Project ID: ueehvbrmy3
+---
+
+<script>
+  import Clarity from '@microsoft/clarity';
+  
+  // Initialize Clarity with project ID
+  const projectId = 'ueehvbrmy3';
+  Clarity.init(projectId);
+  
+  // Track page views
+  if (typeof window !== 'undefined') {
+    // Identify user (optional - can customize based on your user data)
+    // Clarity.identify("custom-id", "custom-session-id", "custom-page-id", "friendly-name");
+    
+    // Set custom tags for this site
+    Clarity.setTag('site', 'jumpstart-scaling');
+    Clarity.setTag('environment', 'production');
+  }
+</script>

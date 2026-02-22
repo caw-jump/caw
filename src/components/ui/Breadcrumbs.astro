@@ -1,0 +1,22 @@
+---
+interface Props{items:{name:string;url:string}[]}
+const{items}=Astro.props;
+const last=items.length-1;
+---
+<nav aria-label="Breadcrumb" class="bc-nav">
+<ol class="bc-list">
+{items.map((item,i)=>{const isLast=i===last;return(
+<li class="bc-item">
+{isLast?<span class="bc-current" aria-current="page">{item.name}</span>:<Fragment><a href={item.url} class="bc-link">{item.name}</a><span class="bc-sep" aria-hidden="true">/</span></Fragment>}
+</li>
+)})}
+</ol>
+</nav>
+<style>
+.bc-nav{max-width:1400px;margin:0 auto;padding:1rem 1.5rem}
+.bc-list{display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;list-style:none;padding:0;margin:0;font-size:0.85rem}
+.bc-link{color:var(--text-secondary);text-decoration:none;transition:color 0.2s}
+.bc-link:hover{color:var(--accent)}
+.bc-sep{color:var(--text-secondary);opacity:0.4}
+.bc-current{color:var(--text-primary)}
+</style>

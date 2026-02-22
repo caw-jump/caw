@@ -1,0 +1,33 @@
+---
+// Dynamic page route - direct Postgres
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BlockRenderer from '../components/BlockRenderer.astro';
+import { getPageData } from '../lib/dbLoader';
+
+const slug = Array.isArray(Astro.params.slug) ? Astro.params.slug.join('/') : (Astro.params.slug || '');
+const domain = Astro.locals.domain || Astro.request.headers.get('host') || 'chrisamaya.work';
+const siteUrl = domain.includes('://') ? domain : `https://${domain}`;
+
+const pageData = await getPageData(siteUrl, slug);
+
+if (!pageData) {
+  return Astro.redirect('/404');
+}
+
+const { page, blocks, palette, nav, footer, local_seo } = pageData;
+const themeConfig = (Astro.locals.themeConfig as Record<string, unknown>) || {};
+const siteName = (themeConfig.site_name as string) || (footer as { copyright?: string })?.copyright || 'Chris Amaya';
+---
+
+<BaseLayout
+  title={page.title || 'Chris Amaya'}
+  description="Stop hiring freelancers. Start building an empire."
+  palette={palette as 'gold' | 'emerald' | 'sapphire'}
+  fluid={true}
+  siteName={siteName}
+  nav={nav as { portfolio?: { name: string; href: string }[]; cta?: { label: string; href: string } }}
+  footer={footer as { tagline?: string; copyright?: string }}
+  localSeo={local_seo as { person?: Record<string, unknown>; service?: Record<string, unknown>; address?: { locality?: string; region?: string; postalCode?: string }; areaServed?: string } | undefined}
+>
+  <BlockRenderer blocks={blocks} />
+</BaseLayout>

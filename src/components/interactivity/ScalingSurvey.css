@@ -1,0 +1,306 @@
+/* src/components/ui/ScalingSurvey.css */
+
+/* --- CORE VARIABLES --- */
+:root {
+    /* Colors */
+    --gold-primary: #D4B062;
+    --gold-hover: #FFE5A0;
+    --gold-dim: rgba(212, 176, 98, 0.1);
+    --bg-dark: #08080A;
+    --bg-card: rgba(20, 20, 25, 0.6);
+    --bg-input: #15151A;
+    --border-subtle: rgba(255, 255, 255, 0.1);
+    --border-focus: rgba(212, 176, 98, 0.5);
+    --error-red: #ff4444;
+
+    /* Text Colors (implied but were missing) */
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+    --text-muted: #52525b;
+
+    /* Fonts */
+    --font-ui: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* FLUID SPACING & TYPOGRAPHY */
+    /* This 1 line replaces multiple media query overrides */
+    --pad-container: clamp(1.25rem, 5vw, 3rem);
+    --font-h2: clamp(1.75rem, 4vw, 2.5rem);
+}
+
+/* --- MAIN CONTAINER --- */
+.survey-container {
+    background: linear-gradient(145deg, rgba(20, 20, 25, 0.8) 0%, rgba(8, 8, 10, 0.95) 100%);
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+
+    /* FLUID PADDING: No need to change this in media queries anymore */
+    padding: var(--pad-container);
+
+    /* FLUID WIDTH: Caps at 1000px, otherwise 100% */
+    width: min(100%, 1000px);
+
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-ui);
+    box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.8);
+    box-sizing: border-box;
+}
+
+/* --- PROGRESS BAR --- */
+.progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.fill {
+    height: 100%;
+    background: var(--gold-primary);
+    box-shadow: 0 0 10px var(--gold-primary);
+}
+
+/* --- HEADER & NAV --- */
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.step-count {
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: color 0.2s;
+    padding: 0.5rem;
+    margin: -0.5rem;
+}
+
+.back-btn:hover {
+    color: var(--text-primary);
+}
+
+/* --- TYPOGRAPHY --- */
+h2 {
+    color: var(--text-primary);
+    /* FLUID FONT: Scales smoothly from 1.75rem to 2.5rem */
+    font-size: var(--font-h2);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 var(--pad-container) 0;
+    line-height: 1.1;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* --- OPTION GRID --- */
+.step-content {
+    width: 100%;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.options-grid {
+    display: grid;
+    /* SMART GRID: Auto-fits, but ensures columns never squash below 260px */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 1.25rem;
+}
+
+.option-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    padding: 2.5rem 1.5rem;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    text-align: center;
+    position: relative;
+    will-change: transform, box-shadow;
+}
+
+.option-card:hover {
+    border-color: var(--gold-primary);
+    background: var(--gold-dim);
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}
+
+.opt-icon {
+    font-size: 2.5rem;
+    filter: grayscale(1) opacity(0.7);
+    transition: all 0.2s;
+}
+
+.option-card:hover .opt-icon {
+    transform: scale(1.1);
+    filter: grayscale(0) opacity(1);
+    color: var(--gold-primary);
+}
+
+.opt-label {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.option-card:hover .opt-label {
+    color: var(--text-primary);
+}
+
+/* --- INPUT FORMS --- */
+.input-area {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: min(100%, 600px);
+    /* Use min() here for responsiveness */
+    margin: 0 auto;
+}
+
+.form-group {
+    width: 100%;
+    position: relative;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.6rem;
+    font-weight: 500;
+}
+
+input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    padding: 1.2rem;
+    color: var(--text-primary);
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: var(--font-ui);
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+input::placeholder {
+    color: var(--text-muted);
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--gold-primary);
+    background: #1A1A1F;
+    box-shadow: 0 0 0 1px var(--gold-primary);
+}
+
+/* Error States */
+.form-group.error input {
+    border-color: var(--error-red);
+    background: rgba(255, 68, 68, 0.05);
+}
+
+.error-msg {
+    color: var(--error-red);
+    font-size: 0.8rem;
+    margin-top: 0.4rem;
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- ACTION AREA --- */
+.submit-btn {
+    background: var(--gold-primary);
+    color: #000;
+    border: none;
+    padding: 1.25rem;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: all 0.2s;
+    width: 100%;
+    box-shadow: 0 4px 15px rgba(212, 176, 98, 0.2);
+}
+
+.submit-btn:hover:not(:disabled) {
+    background: var(--gold-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(212, 176, 98, 0.4);
+}
+
+.submit-btn:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* --- MOBILE LAYOUT CHANGES --- */
+/* Notice: Much shorter. We only keep layout shifts (row vs col), not padding fixes */
+@media (max-width: 600px) {
+    .survey-container {
+        /* Only borders/bg changes remain. Padding is now handled by clamp() above */
+        border-radius: 0;
+        border: none;
+        border-bottom: 1px solid var(--border-subtle);
+        background: transparent;
+        min-height: auto;
+    }
+
+    /* We keep this because it's a structural layout change */
+    .option-card {
+        flex-direction: row;
+        padding: 1rem 1.25rem;
+        /* Minor adjustment for the horizontal layout */
+        justify-content: flex-start;
+        text-align: left;
+        min-height: 70px;
+    }
+
+    .opt-icon {
+        font-size: 1.75rem;
+        margin-right: 1.25rem;
+        margin-bottom: 0;
+    }
+}

@@ -1,0 +1,123 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getArticleBySlug } from '../../lib/dbLoader';
+
+const { slug } = Astro.params;
+const domain = Astro.locals.domain || Astro.request.headers.get('host') || 'chrisamaya.work';
+const siteUrl = domain.includes('://') ? domain : `https://${domain}`;
+
+const article = await getArticleBySlug(siteUrl, slug as string);
+
+if (!article) {
+  return Astro.redirect('/404');
+}
+
+const title = article.meta_title ?? article.title ?? article.slug ?? 'Article';
+const description = article.meta_description ?? article.title ?? '';
+const rawHtml = article.html_content ?? article.content ?? '<p>Content coming soon.</p>';
+
+function estimateReadTime(html: string): number {
+  const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const words = text ? text.split(/\s+/).length : 0;
+  return Math.max(1, Math.ceil(words / 200));
+}
+
+function slugify(text: string): string {
+  return text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+}
+
+function sectionedSections(html: string): { sections: { class: string; html: string }[]; tocHeadings: string[] } {
+  const tocHeadings: string[] = [];
+  const h2Matches = html.match(/<h2[^>]*>([^<]+)<\/h2>/gi) || [];
+  for (const h of h2Matches) {
+    tocHeadings.push(h.replace(/<h2[^>]*>|<\/h2>/gi, '').replace(/<[^>]+>/g, '').trim());
+  }
+  const parts = html.split(/(?=<h2[\s>])/i);
+  const sections: { class: string; html: string }[] = [];
+  let alt = 'dark';
+  for (let i = 0; i < parts.length; i++) {
+    let part = parts[i].trim();
+    if (!part) continue;
+    part = part.replace(/<h2([^>]*)>([^<]*)<\/h2>/gi, (_, attrs, content) => {
+      const text = content.replace(/<[^>]+>/g, '').trim();
+      const id = slugify(text) || `section-${i}`;
+      return `<h2 id="${id}"${attrs}>${content}</h2>`;
+    });
+    sections.push({ class: `section ${alt}`, html: part });
+    alt = alt === 'dark' ? 'light' : 'dark';
+  }
+  if (sections.length === 0) {
+    sections.push({ class: 'section dark', html });
+  }
+  return { sections, tocHeadings };
+}
+
+const readTime = estimateReadTime(rawHtml);
+const { sections, tocHeadings } = sectionedSections(rawHtml);
+const hasToc = tocHeadings.length >= 3;
+---
+
+<BaseLayout
+  title={`${title} | Chris Amaya`}
+  description={description}
+  palette="emerald"
+  fluid={true}
+  crumbs={[{ name: 'Knowledge Base', url: '/knowledge-base' }, { name: 'Articles', url: '/articles' }, { name: title, url: `/articles/${article.slug}` }]}
+>
+  <style>
+    .prose-article h1 { font-size: 2.25rem; font-weight: 700; margin-bottom: 1.5rem; }
+    .prose-article h2 { font-size: 1.5rem; margin-top: 2rem; margin-bottom: 0.75rem; }
+    .prose-article h3 { font-size: 1.25rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    .prose-article p { margin-bottom: 1rem; line-height: 1.75; }
+    .prose-article ul, .prose-article ol { margin-bottom: 1rem; padding-left: 1.5rem; }
+    .prose-article a { color: #00FF94; text-decoration: underline; }
+    .section.dark { background: #08080A; }
+    .section.light { background: #0B0B0F; }
+    .section { padding: 2rem 0; }
+    .section .prose-wrapper { max-width: 48rem; margin: 0 auto; padding: 0 1.5rem; }
+    .toc { position: sticky; top: 6rem; }
+  </style>
+
+  <article class="py-16">
+    <div class="container mx-auto px-6 max-w-5xl flex flex-col lg:flex-row gap-12">
+      <div class="flex-1 min-w-0">
+        <header class="mb-12">
+          <nav class="text-architect font-mono text-sm mb-4" aria-label="Breadcrumb">
+            <a href="/knowledge-base" class="hover:underline">Knowledge Base</a>
+            <span class="mx-2">/</span>
+            <a href="/articles" class="hover:underline">Articles</a>
+          </nav>
+          <h1 class="text-4xl font-bold text-white">{title}</h1>
+          <div class="flex flex-wrap items-center gap-4 mt-4 text-sm text-white/60">
+            {article.date_created && (
+              <time datetime={article.date_created}>
+                {new Date(article.date_created).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+              </time>
+            )}
+            <span>{readTime} min read</span>
+            {article.category && <span class="px-2 py-0.5 rounded bg-architect/15 text-architect">{article.category}</span>}
+          </div>
+        </header>
+        {sections.map((s) => (
+          <section class={s.class}>
+            <div class="prose-wrapper">
+              <div class="prose prose-invert prose-lg max-w-none prose-article" set:html={s.html} />
+            </div>
+          </section>
+        ))}
+      </div>
+      {hasToc && (
+        <aside class="lg:w-56 flex-shrink-0">
+          <div class="toc">
+            <h3 class="text-sm font-bold text-white/80 uppercase tracking-wider mb-3">On this page</h3>
+            <ul class="space-y-2 text-sm">
+              {tocHeadings.map((h) => (
+                <li><a href={`#${slugify(h)}`} class="text-white/60 hover:text-architect transition">{h}</a></li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      )}
+    </div>
+  </article>
+</BaseLayout>

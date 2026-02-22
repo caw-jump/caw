@@ -1,0 +1,7 @@
+---
+export interface Props { text: string }
+const { text } = Astro.props
+---
+<blockquote class="pull-quote my-12 max-w-4xl mx-auto border-l-4 border-[var(--accent)] pl-8 italic text-2xl">
+  <p class="text-[var(--text-primary)]/90">&ldquo;{text}&rdquo;</p>
+</blockquote>

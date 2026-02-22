@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getArticles } from '../../../lib/dbLoader';
+
+const { slug } = Astro.params;
+const tag = slug ? decodeURIComponent(slug as string) : '';
+
+const domain = Astro.locals.domain || Astro.request.headers.get('host') || 'chrisamaya.work';
+const siteUrl = domain.includes('://') ? domain : `https://${domain}`;
+
+const articles = await getArticles(siteUrl, { tag, limit: 100 });
+
+function formatDate(d: string | null): string {
+  if (!d) return '';
+  try {
+    return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  } catch {
+    return '';
+  }
+}
+---
+
+<BaseLayout
+  title={`${tag} | Knowledge Base | Chris Amaya`}
+  description={`Articles tagged with ${tag}.`}
+  palette="emerald"
+  fluid={true}
+  crumbs={[{ name: 'Knowledge Base', url: '/knowledge-base' }, { name: tag, url: `/knowledge-base/tag/${encodeURIComponent(tag)}` }]}
+>
+  <style>
+    .text-architect { color: #00FF94; }
+    .card-custom { background-color: #0F0F0F; border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 2rem; transition: border-color 0.3s ease; }
+    .card-custom:hover { border-color: rgba(0,255,148,0.5); }
+    .tag-pill { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 0.5rem; background: rgba(0,255,148,0.15); color: #00FF94; }
+  </style>
+
+  <div class="bg-black min-h-screen py-16">
+    <div class="container mx-auto px-6">
+      <p class="text-architect font-mono text-sm mb-2"><a href="/knowledge-base" class="hover:underline">Knowledge Base</a> / #{tag}</p>
+      <h1 class="text-4xl font-black text-white mb-8">#{tag}</h1>
+      {articles.length === 0 ? (
+        <p class="text-white/60">No articles with this tag.</p>
+      ) : (
+        <ul class="space-y-6">
+          {articles.map((a) => (
+            <li>
+              <a href={`/articles/${a.slug}`} class="block card-custom border-architect/50 group">
+                <div class="flex flex-col md:flex-row md:items-start gap-4">
+                  <div class="md:w-1/4 flex-shrink-0 text-architect/80 font-mono text-sm">{formatDate(a.date_created)}</div>
+                  <div class="md:flex-1">
+                    <h2 class="text-xl font-bold text-white group-hover:text-architect transition">{a.title ?? a.slug ?? 'Untitled'}</h2>
+                    {a.meta_description && <p class="text-white/70 mt-2 line-clamp-2">{a.meta_description}</p>}
+                    {a.category && <span class="tag-pill opacity-80 mt-2 inline-block">{a.category}</span>}
+                  </div>
+                </div>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+</BaseLayout>

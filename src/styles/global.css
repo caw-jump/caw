@@ -1,0 +1,252 @@
+@import "tailwindcss";
+
+/* =========================================
+   GLOBAL THEME VARIABLES (Unified v3)
+   ========================================= */
+:root {
+    --bg-deep: #0B0B0F;
+    --bg-light: #f5f5f7;
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255, 255, 255, 0.85);
+    --text-light: #050505;
+    --text-muted: rgba(255, 255, 255, 0.60);
+
+    /* Gold Accents */
+    --accent: #E8C677;
+    --accent-glow: #FFE5A0;
+    --accent-dim: rgba(232, 198, 119, 0.15);
+
+    --border: rgba(232, 198, 119, 0.15);
+    --border-light: rgba(0, 0, 0, 0.08);
+    --border-glow: rgba(232, 198, 119, 0.4);
+
+    --gradient-header: linear-gradient(to bottom, #1a1a1a, #000000);
+    --gradient-primary: conic-gradient(from 180deg at 50% 50%, #FFE5A0, #E8C677, #D4B062, #E8C677, #FFE5A0);
+    --gradient-accent: linear-gradient(135deg, #FFE5A0 0%, #E8C677 50%, #D4B062 100%);
+
+    --transition-smooth: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    --glow: 0 0 30px var(--accent-dim), 0 0 60px var(--accent-dim);
+    --glow-soft: 0 20px 50px -10px rgba(0, 0, 0, 0.5), 0 10px 30px -15px rgba(232, 198, 119, 0.1);
+
+    --container-width: 100%;
+}
+
+@media (min-width: 1280px) {
+    :root {
+        --container-width: 1600px;
+    }
+}
+
+/* Base & Typography */
+html {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.7;
+    min-height: 100vh;
+    background: var(--bg-deep);
+    /* Subtle texture for deep background */
+    background-image:
+        radial-gradient(circle at 20% 80%, rgba(232, 198, 119, 0.03), transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(232, 198, 119, 0.03), transparent 50%);
+    background-attachment: fixed;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(232, 198, 119, 0.2);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(232, 198, 119, 0.4);
+}
+
+/* Selection */
+::selection {
+    background: var(--accent-glow);
+    color: #000;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    letter-spacing: -0.04em;
+    font-weight: 900;
+    line-height: 1.1;
+    color: inherit;
+}
+
+.gradient-text {
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+}
+
+/* Prose */
+.prose {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: inherit;
+    /* Inherits from section color */
+    max-width: 100%;
+}
+
+.prose p {
+    margin-bottom: 2rem;
+}
+
+.prose strong {
+    color: inherit;
+    font-weight: 700;
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+    margin-top: 4rem;
+    margin-bottom: 1.5rem;
+    color: inherit;
+}
+
+/* Header - Solid Matte Black */
+nav {
+    background: var(--gradient-header) !important;
+    backdrop-filter: none !important;
+    border-bottom: 1px solid var(--border);
+    transition: all 0.4s ease;
+}
+
+nav.scrolled {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.nav-scrolled {
+    /* Legacy support */
+    background: var(--gradient-header) !important;
+    backdrop-filter: none !important;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Alternating Sections System */
+.section {
+    padding: 6rem 0;
+    position: relative;
+    transition: background 0.6s ease, color 0.6s ease;
+}
+
+.section.dark {
+    background: #0B0B0F;
+    color: #FFFFFF;
+}
+
+.section.light {
+    background: #FFFFFF;
+    color: #050505;
+}
+
+/* UI Components */
+/* Card Adjustments */
+.glass-card {
+    background: rgba(25, 25, 40, 0.45);
+    /* Dark default */
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 2rem;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.section.light .glass-card {
+    background: #FFFFFF;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    /* No gold borders */
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12);
+}
+
+.glass-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(232, 198, 119, 0.3) !important;
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.18);
+}
+
+/* Accessibility & Utils */
+button:focus-visible,
+a:focus-visible,
+input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(232, 198, 119, 0.2);
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.section.light .text-muted {
+    color: rgba(5, 5, 5, 0.6);
+}
+
+.container {
+    width: 100%;
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+/* Animations */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.font-mono {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Particles (Legacy Support) */
+.particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Image Reset */
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: inherit;
+}

@@ -1,0 +1,22 @@
+---
+export interface Props { rows: {traditional:string;engineered:string}[] }
+const { rows } = Astro.props
+---
+<div class="overflow-x-auto my-16">
+  <table class="comparison-table w-full max-w-5xl mx-auto border-collapse min-w-[600px]">
+    <thead>
+      <tr>
+        <th class="p-6 text-left bg-[var(--surface)] border-b border-[var(--border)] text-[var(--text-secondary)] w-1/2">Traditional Approach</th>
+        <th class="p-6 text-left bg-[var(--surface)] border-b border-[var(--accent)] text-[var(--accent)] w-1/2">Engineered Authority</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map(row => (
+        <tr class="border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface)] transition-colors">
+          <td class="p-6 align-top text-[var(--text-secondary)]">{row.traditional}</td>
+          <td class="p-6 align-top text-[var(--text-primary)] bg-[var(--accent-dim)]/10">{row.engineered}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,39 @@
+---
+---
+<div class="share-buttons flex gap-4 my-8">
+  <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(Astro.props.title)}&url=${encodeURIComponent(Astro.request.url)}`} target="_blank" rel="noopener noreferrer" class="share-btn twitter">
+    🐦 Tweet
+  </a>
+  <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(Astro.request.url)}`} target="_blank" rel="noopener noreferrer" class="share-btn linkedin">
+    💼 Share
+  </a>
+  <a href={`mailto:?subject=${encodeURIComponent(Astro.props.title)}&body=Check this out: ${encodeURIComponent(Astro.request.url)}`} class="share-btn email">
+    ✉️ Email
+  </a>
+</div>
+
+<style>
+  .share-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    text-decoration: none;
+  }
+
+  .share-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .twitter:hover { color: #38bdf8; border-color: #38bdf8; }
+  .linkedin:hover { color: #0ea5e9; border-color: #0ea5e9; }
+  .email:hover { color: #facc15; border-color: #facc15; }
+</style>

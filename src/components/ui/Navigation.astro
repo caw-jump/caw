@@ -1,0 +1,281 @@
+---
+// src/components/ui/Navigation.astro
+// Tenant Navigation - DB-driven when nav prop provided (from theme_config)
+interface Props {
+  currentPath?: string;
+  nav?: { portfolio?: { name: string; href: string }[]; custom_apps?: { name: string; href: string }[]; cta?: { label: string; href: string } };
+  siteName?: string;
+}
+
+const { currentPath = '', nav, siteName = 'Site' } = Astro.props;
+
+const customAppsLinks = nav?.custom_apps ?? [];
+
+const JUMPSTART_URL = "https://jumpstartscaling.com";
+
+// Use nav from API when provided, else defaults
+const portfolioLinks = nav?.portfolio ?? [
+  { name: "About Me", href: "/#about" },
+  { name: "Projects", href: "/#projects" },
+  { name: "Blog", href: "/blog" },
+  { name: "How I Build", href: "/guide/how-i-build" },
+  { name: "Knowledge Base", href: "/knowledge-base" },
+  { name: "Contact", href: "/#contact" },
+];
+const ctaLabel = nav?.cta?.label ?? "Work With Me";
+const ctaHref = nav?.cta?.href ?? "#contact";
+
+// External Hotlinks (Specific Calculators on Jumpstart)
+const calculatorLinks = [
+  { name: "CAC Calculator", href: `${JUMPSTART_URL}/resources/calculators#cac-calculator` },
+  { name: "Churn Calculator", href: `${JUMPSTART_URL}/resources/calculators#churn-calculator` },
+  { name: "LTV Calculator", href: `${JUMPSTART_URL}/resources/calculators#ltv-calculator` },
+  { name: "ROAS / Break-Even", href: `${JUMPSTART_URL}/resources/calculators#break-even-calculator` },
+  { name: "MRR Forecast", href: `${JUMPSTART_URL}/resources/calculators#mrr-forecast` },
+  { name: "Cohort Analysis", href: `${JUMPSTART_URL}/resources/calculators#cohort-analysis` },
+];
+
+const jumpstartServices = [
+  { name: "Paid Acquisition", href: `${JUMPSTART_URL}/services/paid-acquisition` },
+  { name: "Funnel Architecture", href: `${JUMPSTART_URL}/services/funnel-architecture` },
+  { name: "CRM Transformation", href: `${JUMPSTART_URL}/services/crm-transformation` },
+  { name: "Voice of Customer", href: `${JUMPSTART_URL}/services/authority-engine` }, // Mapped to Authority Engine
+];
+---
+
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4 bg-[#0B0B0F] border-b border-white/5">
+  <div class="max-w-[1600px] mx-auto px-6 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="/" aria-label={`${siteName} homepage`} class="flex items-center gap-3 group">
+      <div class="w-10 h-10 bg-gradient-to-br from-[#00FF94] to-[#00BC6D] rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(0,255,148,0.3)] group-hover:shadow-[0_0_25px_rgba(0,255,148,0.5)] transition-all">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="3">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+        </svg>
+      </div>
+      <span class="font-bold text-xl tracking-tight text-white hidden sm:block">
+        {siteName.includes(' ') ? (
+          <>
+            {siteName.split(' ')[0]}<span class="text-[#00FF94]">{siteName.split(' ').slice(1).join(' ')}</span>
+          </>
+        ) : siteName}
+      </span>
+    </a>
+
+    <!-- Desktop Menu -->
+    <ul class="hidden lg:flex items-center gap-8 font-medium text-sm text-white/90">
+      
+      <!-- Portfolio (Local) -->
+      <li class="relative group">
+        <button class="hover:text-[#00FF94] transition flex items-center gap-1 py-4">
+          Portfolio <span class="text-[10px] opacity-70 group-hover:rotate-180 transition-transform">▼</span>
+        </button>
+        <!-- Hover Bridge -->
+        <div class="absolute top-full left-0 w-full h-4 bg-transparent"></div>
+        
+        <div class="absolute top-[calc(100%+0.5rem)] left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 w-48 pointer-events-none group-hover:pointer-events-auto">
+          <ul class="bg-[#0A0A0A] border border-white/10 rounded-xl p-2 shadow-2xl overflow-hidden">
+            {portfolioLinks.map(item => (
+              <li>
+                <a href={item.href} class="block py-2.5 px-4 rounded-lg hover:bg-[#00FF94]/10 hover:text-[#00FF94] transition text-white/80">
+                  {item.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </li>
+
+      <!-- Custom Apps (DB-driven when nav.custom_apps provided) -->
+      {customAppsLinks.length > 0 && (
+        <li class="relative group">
+          <button class="hover:text-[#00FF94] transition flex items-center gap-1 py-4">
+            Custom Apps <span class="text-[10px] opacity-70 group-hover:rotate-180 transition-transform">▼</span>
+          </button>
+          <div class="absolute top-full left-0 w-full h-4 bg-transparent"></div>
+          <div class="absolute top-[calc(100%+0.5rem)] left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 w-56 pointer-events-none group-hover:pointer-events-auto">
+            <ul class="bg-[#0A0A0A] border border-white/10 rounded-xl p-2 shadow-2xl overflow-hidden">
+              {customAppsLinks.map((item) => (
+                <li>
+                  <a href={item.href} class="block py-2.5 px-4 rounded-lg hover:bg-[#00FF94]/10 hover:text-[#00FF94] transition text-white/80">
+                    {item.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </li>
+      )}
+
+      <!-- Growth Tools (External Hotlinks) -->
+      <li class="relative group">
+        <button class="hover:text-[#E8C677] transition flex items-center gap-1 py-4">
+          Growth Tools <span class="text-[10px] opacity-70 group-hover:rotate-180 transition-transform">▼</span>
+        </button>
+        <!-- Hover Bridge -->
+        <div class="absolute top-full left-0 w-full h-4 bg-transparent"></div>
+
+        <div class="absolute top-[calc(100%+0.5rem)] left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 w-64 pointer-events-none group-hover:pointer-events-auto">
+          <ul class="bg-[#0A0A0A] border border-white/10 rounded-xl p-2 shadow-2xl overflow-hidden">
+            <li class="px-4 py-2 text-[10px] uppercase tracking-widest text-[#E8C677]/70 font-mono">Calculators</li>
+            {calculatorLinks.map(item => (
+              <li>
+                <a href={item.href} class="block py-2 px-4 rounded-lg hover:bg-[#E8C677]/10 hover:text-[#E8C677] transition text-white/80">
+                  {item.name}
+                </a>
+              </li>
+            ))}
+            <li class="border-t border-white/10 my-2"></li>
+            <li><a href={`${JUMPSTART_URL}/audit`} class="block py-2 px-4 rounded-lg hover:bg-[#E8C677] hover:text-black transition text-[#E8C677] font-bold">Full Audit ></a></li>
+          </ul>
+        </div>
+      </li>
+
+      <!-- Jumpstart Services (External) -->
+      <li class="relative group">
+        <button class="hover:text-[#E8C677] transition flex items-center gap-1 py-4">
+          Agency <span class="text-[10px] opacity-70 group-hover:rotate-180 transition-transform">▼</span>
+        </button>
+        <!-- Hover Bridge -->
+        <div class="absolute top-full left-0 w-full h-4 bg-transparent"></div>
+
+        <div class="absolute top-[calc(100%+0.5rem)] left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 w-60 pointer-events-none group-hover:pointer-events-auto">
+          <ul class="bg-[#0A0A0A] border border-white/10 rounded-xl p-2 shadow-2xl overflow-hidden">
+             {jumpstartServices.map(item => (
+              <li>
+                <a href={item.href} class="block py-2.5 px-4 rounded-lg hover:bg-[#E8C677]/10 hover:text-[#E8C677] transition text-white/80">
+                  {item.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </li>
+
+      <!-- CTA -->
+      <li>
+        <a href={ctaHref} class="px-6 py-2.5 bg-[#00FF94] text-black font-bold text-sm uppercase tracking-wider rounded-lg hover:bg-white transition shadow-[0_0_20px_rgba(0,255,148,0.4)] hover:shadow-white/50">
+          {ctaLabel}
+        </a>
+      </li>
+    </ul>
+
+    <!-- Mobile Hamburger -->
+    <button id="mobile-menu-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-drawer" class="lg:hidden z-[60] relative w-12 h-12 flex flex-col justify-center items-center gap-1.5 group">
+      <span class="w-8 h-0.5 bg-white transition-all duration-300 origin-center group-[.open]:rotate-45 group-[.open]:translate-y-2"></span>
+      <span class="w-8 h-0.5 bg-white transition-all duration-300 origin-center group-[.open]:opacity-0"></span>
+      <span class="w-8 h-0.5 bg-white transition-all duration-300 origin-center group-[.open]:-rotate-45 group-[.open]:-translate-y-2"></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Drawer -->
+<div id="mobile-drawer" class="fixed inset-0 bg-[#0B0B0F]/99 backdrop-blur-3xl translate-x-full transition-transform duration-500 ease-out z-50 h-[100dvh] overflow-y-auto lg:hidden" aria-hidden="true">
+  <div class="flex flex-col min-h-full">
+    <!-- Header Spacing -->
+    <div class="h-24 flex items-center justify-end px-6">
+       <!-- Close button handled by the z-60 hamburger above -->
+    </div>
+
+    <div class="flex-1 px-8 pb-12">
+      <ul class="space-y-8">
+        <li><a href="/" class="text-3xl font-bold text-white hover:text-[#00FF94] transition mobile-link">Home</a></li>
+
+        <!-- Portfolio -->
+        <li class="space-y-4">
+          <span class="text-[#00FF94] text-sm font-mono uppercase tracking-widest border-b border-[#00FF94]/30 pb-2 block">Portfolio</span>
+          <ul class="space-y-2">
+            {portfolioLinks.map(item => (
+              <li><a href={item.href} class="block text-xl text-white/80 hover:text-[#00FF94] transition mobile-link py-2">{item.name}</a></li>
+            ))}
+          </ul>
+        </li>
+
+        <!-- Custom Apps -->
+        {customAppsLinks.length > 0 && (
+          <li class="space-y-4">
+            <span class="text-[#00FF94] text-sm font-mono uppercase tracking-widest border-b border-[#00FF94]/30 pb-2 block">Custom Apps</span>
+            <ul class="space-y-2">
+              {customAppsLinks.map((item) => (
+                <li><a href={item.href} class="block text-lg text-white/70 hover:text-[#00FF94] transition mobile-link py-1">{item.name}</a></li>
+              ))}
+            </ul>
+          </li>
+        )}
+
+        <!-- Growth Tools -->
+        <li class="space-y-4">
+           <span class="text-[#E8C677] text-sm font-mono uppercase tracking-widest border-b border-[#E8C677]/30 pb-2 block">Growth Tools</span>
+           <ul class="space-y-2">
+            {calculatorLinks.slice(0, 4).map(item => (
+              <li><a href={item.href} class="block text-lg text-white/70 hover:text-[#E8C677] transition mobile-link py-1">{item.name}</a></li>
+            ))}
+             <li><a href={`${JUMPSTART_URL}/resources/calculators`} class="block text-sm text-[#E8C677] py-2 underline">View All Tools -></a></li>
+           </ul>
+        </li>
+
+        <!-- Agency -->
+        <li class="space-y-4">
+           <span class="text-[#E8C677] text-sm font-mono uppercase tracking-widest border-b border-[#E8C677]/30 pb-2 block">Jumpstart Agency</span>
+           <ul class="space-y-2">
+             <li><a href={`${JUMPSTART_URL}`} class="block text-lg text-white/70 hover:text-[#E8C677] transition mobile-link py-1">Agency Home</a></li>
+             <li><a href={`${JUMPSTART_URL}/services`} class="block text-lg text-white/70 hover:text-[#E8C677] transition mobile-link py-1">Services</a></li>
+           </ul>
+        </li>
+
+        <li class="mt-8 pt-8 border-t border-white/10">
+          <a href={ctaHref} class="block w-full text-center py-4 bg-[#00FF94] text-black font-bold text-xl rounded-xl shadow-[0_0_30px_rgba(0,255,148,0.3)] hover:scale-105 transition mobile-link">
+            {ctaLabel}
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  const menuBtn = document.getElementById('mobile-menu-btn');
+  const drawer = document.getElementById('mobile-drawer');
+  const html = document.documentElement;
+  const mobileLinks = document.querySelectorAll('.mobile-link');
+  let isOpen = false;
+
+  function toggleMenu() {
+    isOpen = !isOpen;
+    
+    // Toggle Classes
+    if (isOpen) {
+        drawer.classList.remove('translate-x-full');
+        drawer.setAttribute('aria-hidden', 'false');
+        menuBtn.classList.add('open');
+        menuBtn.setAttribute('aria-expanded', 'true');
+        html.style.overflow = 'hidden'; // Prevent scrolling
+    } else {
+        drawer.classList.add('translate-x-full');
+        drawer.setAttribute('aria-hidden', 'true');
+        menuBtn.classList.remove('open');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        html.style.overflow = '';
+    }
+  }
+
+  // Event Listeners
+  menuBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMenu();
+  });
+
+  // Close on link click
+  mobileLinks.forEach(link => {
+      link.addEventListener('click', () => {
+          if (isOpen) toggleMenu();
+      });
+  });
+
+  // Close on outside click is tricky with the z-index stack, usually separate overlay is better,
+  // but full screen drawer implies no outside area.
+  
+  // Close on Escape
+  document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen) toggleMenu();
+  });
+</script>

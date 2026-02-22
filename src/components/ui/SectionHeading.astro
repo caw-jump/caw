@@ -1,0 +1,8 @@
+---
+interface Props{text:string;as?:'h2'|'h3'|'h4'}
+const{text,as:Tag='h2'}=Astro.props;
+---
+<Tag class="sh"><span class="gradient-text">{text}</span></Tag>
+<style>
+.sh{font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;margin:3rem 0 1.5rem;line-height:1.2;max-width:900px;padding:0 1.5rem}
+</style>

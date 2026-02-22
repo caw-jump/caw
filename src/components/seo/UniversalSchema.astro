@@ -1,0 +1,117 @@
+---
+interface Props {
+  type: 'service' | 'article' | 'organization' | 'localbusiness';
+  title: string;
+  description: string;
+  url: string;
+  image?: string;
+  datePublished?: string;
+  dateModified?: string;
+  author?: string;
+  services?: string[];
+  serviceArea?: string;
+}
+
+const { 
+  type, 
+  title, 
+  description, 
+  url, 
+  image = '/og-default.png',
+  datePublished,
+  dateModified,
+  author = 'Jumpstart Scaling',
+  services = [],
+  serviceArea = 'Global'
+} = Astro.props;
+
+const baseUrl = Astro.site ? new URL(Astro.site).origin : 'https://chrisamaya.work';
+const fullUrl = `${baseUrl}${url}`;
+const fullImage = image.startsWith('http') ? image : `${baseUrl}${image}`;
+
+// Organization Schema (always included)
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Jumpstart Scaling",
+  "url": baseUrl,
+  "logo": `${baseUrl}/logo.png`,
+  "description": "Growth engineering for companies serious about predictable revenue.",
+  "sameAs": [
+    "https://www.linkedin.com/company/jumpstart-scaling",
+    "https://twitter.com/jumpstartscale"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "Sales",
+    "email": "hello@jumpstartscaling.com"
+  }
+};
+
+// Type-specific schemas
+let typeSchema = {};
+
+if (type === 'service') {
+  typeSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": title,
+    "description": description,
+    "provider": {
+      "@type": "Organization",
+      "name": "Jumpstart Scaling",
+      "url": baseUrl
+    },
+    "serviceType": services.join(', '),
+    "areaServed": serviceArea,
+    "url": fullUrl,
+    "image": fullImage
+  };
+} else if (type === 'article') {
+  typeSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": title,
+    "description": description,
+    "image": fullImage,
+    "datePublished": datePublished,
+    "dateModified": dateModified || datePublished,
+    "author": {
+      "@type": "Person",
+      "name": author
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Jumpstart Scaling",
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${baseUrl}/logo.png`
+      }
+    },
+    "url": fullUrl
+  };
+} else if (type === 'localbusiness') {
+  typeSchema = {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "name": "Jumpstart Scaling",
+    "description": description,
+    "url": baseUrl,
+    "areaServed": {
+      "@type": "Place",
+      "name": serviceArea
+    },
+    "priceRange": "$$$",
+    "serviceType": services.join(', ')
+  };
+}
+
+const schemas = [organizationSchema];
+if (Object.keys(typeSchema).length > 0) {
+  schemas.push(typeSchema);
+}
+---
+
+{schemas.map(schema => (
+  <script type="application/ld+json" set:html={JSON.stringify(schema, null, 2)} />
+))}

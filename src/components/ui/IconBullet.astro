@@ -1,0 +1,13 @@
+---
+export interface Props { items: string[] }
+const { items } = Astro.props
+const icons = ['🎯','🚀','🔍','📈','🛡️','✉️','📊','🏆','♻️','💎']
+---
+<ul class="icon-bullets space-y-6">
+  {items.map((item, i) => (
+    <li class="flex items-start gap-4">
+      <span class="text-3xl filter drop-shadow-lg">{icons[i % icons.length]}</span>
+      <span class="text-xl text-[var(--text-secondary)]">{item}</span>
+    </li>
+  ))}
+</ul>

@@ -1,0 +1,213 @@
+---
+---
+<nav class="quick-nav">
+  <button class="quick-link" id="mobile-menu-trigger" style="background:none; border:none; cursor:pointer; order: -1;" onclick="window.dispatchEvent(new CustomEvent('open-nav-modal'))">
+    <span class="icon">☰</span>
+    <span class="label">Menu</span>
+  </button>
+  <a href="#survey" class="quick-link">
+    <span class="icon">🚀</span>
+    <span class="label">Audit</span>
+  </a>
+  <a href="#visuals" class="quick-link">
+    <span class="icon">📊</span>
+    <span class="label">Charts</span>
+  </a>
+  <a href="#calculators" class="quick-link" id="tools-link">
+    <span class="icon">🧮</span>
+    <span class="label">Tools</span>
+  </a>
+</nav>
+
+<script>
+  // Handle all QuickNav navigation
+  console.log('QuickNav script loaded');
+  
+  function setupQuickNav() {
+    console.log('Setting up QuickNav...');
+    // Audit button - scroll to survey
+    const auditLink = document.querySelector('a[href="#survey"]');
+    if (auditLink) {
+      auditLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const survey = document.querySelector('.cta-section') || document.querySelector('[id*="survey"]');
+        if (survey) {
+          survey.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+
+    // Charts button - scroll to visuals
+    const chartsLink = document.querySelector('a[href="#visuals"]');
+    if (chartsLink) {
+      chartsLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const visuals = document.querySelector('.visuals-section');
+        if (visuals) {
+          visuals.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+
+    // Tools button - scroll to calculators or services
+    const toolsLink = document.getElementById('tools-link');
+    if (toolsLink) {
+      toolsLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const calc = document.querySelector('.roas-calculator-card, .funnel-calc-card, .ltv-card');
+        const services = document.querySelector('.services-section');
+        if (calc) {
+          calc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (services) {
+          services.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          window.location.href = '/services/paid-acquisition';
+        }
+      });
+    }
+
+    // Menu button - trigger modal
+    const menuTrigger = document.getElementById('mobile-menu-trigger');
+    if (menuTrigger) {
+        console.log('Menu trigger found, attaching listener');
+        menuTrigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Menu trigger clicked, dispatching open-nav-modal');
+            window.dispatchEvent(new CustomEvent('open-nav-modal'));
+        });
+    } else {
+        console.error('Menu trigger NOT found');
+    }
+  }
+
+  // Run setup
+  setupQuickNav();
+
+  // Support View Transitions if added later
+  document.addEventListener('astro:page-load', setupQuickNav);
+</script>
+
+<style>
+  .quick-nav {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 450px;
+    background: rgba(15, 15, 15, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 0.6rem 2rem;
+    z-index: 9999;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    transition: all 0.3s ease;
+  }
+  
+  /* Desktop hover effect */
+  .quick-nav:hover {
+    background: rgba(15, 15, 15, 0.95);
+    border-color: rgba(201, 169, 97, 0.3);
+    transform: translateX(-50%) translateY(-2px);
+  }
+
+  .quick-link {
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #999;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    min-width: 50px;
+    position: relative;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.5px;
+  }
+
+  .quick-link .icon {
+    font-size: 1.3rem;
+    margin-bottom: 2px;
+    transition: transform 0.2s;
+  }
+
+  .quick-link:hover {
+    color: #fff;
+  }
+  
+  .quick-link:hover .icon {
+    transform: scale(1.1);
+  }
+
+  .quick-link.highlight {
+    background: linear-gradient(135deg, #C9A961, #e0bd6f);
+    color: #000;
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -35px; /* Floats noticeably above */
+    border: 5px solid #050505; /* Seamless integrated look with dark bg */
+    box-shadow: 0 5px 20px rgba(201, 169, 97, 0.4);
+  }
+
+  .quick-link.highlight .icon {
+    margin-bottom: 0;
+    font-size: 1.4rem;
+  }
+  
+  .quick-link.highlight .label {
+    display: none;
+  }
+  
+  .quick-link.highlight:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 30px rgba(201, 169, 97, 0.6);
+  }
+
+  /* Adjust for very small screens */
+  @media (max-width: 768px) {
+    .quick-nav { 
+      padding: 0.5rem 0.8rem; 
+      width: 95%; 
+      max-width: 280px;
+      bottom: 10px;
+    }
+    
+    .quick-link {
+      min-width: 40px;
+      font-size: 0.65rem;
+    }
+    
+    .quick-link .icon {
+      font-size: 1.1rem;
+    }
+  }
+  
+  @media (max-width: 380px) {
+    .quick-nav { 
+      padding: 0.4rem 0.6rem; 
+      max-width: 240px;
+      /* Ensure links don't wrap */
+      white-space: nowrap; 
+    }
+    
+    .quick-link {
+      min-width: 35px;
+      font-size: 0.6rem;
+    }
+    
+    .quick-link .icon {
+      font-size: 1rem;
+    }
+  }
+
+</style>

@@ -1,0 +1,20 @@
+---
+interface Props{items:string[];title?:string}
+const{items,title='Key Deliverables & Metrics'}=Astro.props;
+---
+<section class="gb-section">
+<h2 class="gb-title"><span class="gradient-text">{title}</span></h2>
+<ul class="gb-list">
+{items.map(item=>(
+<li class="gb-item"><span class="gb-icon" aria-hidden="true">✦</span><span>{item}</span></li>
+))}
+</ul>
+</section>
+<style>
+.gb-section{max-width:800px;margin:4rem auto;padding:0 1.5rem}
+.gb-title{font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;text-align:center;margin:0 0 3rem}
+.gb-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1.25rem}
+.gb-item{display:flex;align-items:flex-start;gap:1rem;font-size:1.15rem;line-height:1.5;color:var(--text-secondary);transition:color 0.2s}
+.gb-item:hover{color:var(--text-primary)}
+.gb-icon{color:var(--accent);font-size:1.25rem;flex-shrink:0;margin-top:0.15rem}
+</style>

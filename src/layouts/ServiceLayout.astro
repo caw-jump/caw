@@ -1,0 +1,30 @@
+---
+import { ViewTransitions } from 'astro:transitions';
+import BaseLayout from './BaseLayout.astro';
+import Clarity from '../components/analytics/Clarity.astro';
+
+// We'll create this to hold shared styles if needed, or just rely on service-page.css
+import '../styles/global.css'; 
+
+interface Props {
+  title: string;
+  description: string;
+  currentPath?: string;
+}
+
+const { title, description, currentPath } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} fluid={true}>
+  <slot name="head" slot="head" />
+  
+  <!-- Inject service-page.css into head slot -->
+  <link rel="stylesheet" href="/styles/service-page.css" slot="head">
+  <!-- Fonts are already in BaseLayout -->
+  
+  <Clarity />
+  
+  <main>
+    <slot />
+  </main>
+</BaseLayout>

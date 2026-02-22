@@ -1,0 +1,316 @@
+---
+// BlockRenderer.astro - Renders blocks by type from page_blocks API data (DB-driven)
+import CTA from './ui/CTA.astro';
+import FunnelCalculator from './calculators/FunnelCalculator.jsx';
+import ScalingSurvey from './interactivity/ScalingSurvey.tsx';
+
+interface Block {
+  id?: string;
+  block_type: string;
+  name?: string;
+  data?: Record<string, unknown>;
+}
+
+interface Props {
+  blocks: Block[];
+}
+
+type BentoItem = { title?: string; description?: string; href?: string };
+type BulletItem = { icon?: string; title?: string; text?: string };
+
+const { blocks } = Astro.props;
+---
+<style>
+  .architect-section {
+    background-color: #050505;
+    color: #fff;
+  }
+  .text-architect {
+    color: #00FF94;
+  }
+  .border-architect {
+    border-color: rgba(0,255,148,0.3);
+  }
+  .bg-architect-dim {
+    background-color: rgba(0,255,148,0.05);
+  }
+  .card-custom {
+    background-color: #0F0F0F;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 1rem;
+    padding: 2rem;
+    transition: border-color 0.3s ease;
+  }
+  .card-custom:hover {
+    border-color: rgba(0,255,148,0.5);
+  }
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+
+{blocks.map((block) => {
+  const d = block.data || {};
+  switch (block.block_type) {
+    case 'hero': {
+      const badge = (d.badge as string) || '';
+      const headline = (d.headline as string) || '';
+      const subhead = (d.subhead as string) || '';
+      const ctaLabel = (d.cta_label as string) || 'Book Consultation';
+      const ctaHref = (d.cta_href as string) || '#contact';
+      const warningText = (d.warning_text as string) || '';
+      return (
+        <section class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20 architect-section">
+          <div class="container mx-auto px-6 relative z-10 text-center">
+            {badge && (
+              <span class="inline-block font-mono text-sm uppercase tracking-[0.2em] mb-6 px-4 py-2 rounded border border-architect bg-architect-dim text-architect">
+                {badge}
+              </span>
+            )}
+            <h1 class="text-5xl md:text-7xl font-black text-white mb-8 leading-tight" set:html={headline} />
+            {subhead && <p class="text-xl md:text-2xl text-white/70 max-w-4xl mx-auto mb-12">{subhead}</p>}
+            <CTA label={ctaLabel} href={ctaHref} />
+            {warningText && <p class="font-mono text-xs text-white/50 mt-8">{warningText}</p>}
+          </div>
+        </section>
+      );
+    }
+    case 'diagnosis': {
+      const eyebrow = (d.eyebrow as string) || '';
+      const title = (d.title as string) || '';
+      const body = (d.body as string) || '';
+      const warningBox = d.warning_box as { title?: string; text?: string } | undefined;
+      const base = import.meta.env.BASE_URL || '/';
+      const videoSrc = (d.video_src as string) || `${base}assets/videos/zombiebabyzaiper.mp4`;
+      const videoPoster = (d.video_poster as string) || `${base}assets/videos/zombiebabyzaiper-poster.jpg`;
+      const figLabel = (d.fig_label as string) || '';
+      return (
+        <section id="about" class="py-24 bg-[#08080A]">
+          <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <div>
+                {eyebrow && <span class="font-mono text-xs uppercase font-bold text-architect tracking-[0.2em] mb-4 block">{eyebrow}</span>}
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">{title}</h2>
+                {body && <p class="text-lg text-white/70 mb-8">{body}</p>}
+                {warningBox && (
+                  <div class="bg-red-900/10 border border-red-500/20 rounded-lg p-6 mb-8">
+                    <h4 class="text-red-500 font-bold mb-2">{warningBox.title || ''}</h4>
+                    <p class="text-red-400/80 text-sm">{warningBox.text || ''}</p>
+                  </div>
+                )}
+              </div>
+              <div class="card-custom p-0 overflow-hidden border-architect/50 shadow-[0_0_30px_rgba(0,255,148,0.1)]">
+                <div class="aspect-video bg-black rounded flex items-center justify-center relative">
+                  <video autoplay loop muted playsinline class="w-full h-full object-cover" poster={videoPoster}>
+                    <source src={videoSrc} type="video/mp4" />
+                  </video>
+                  {figLabel && (
+                    <div class="absolute bottom-4 right-4 bg-black/80 backdrop-blur px-3 py-1 rounded border border-white/10">
+                      <p class="font-mono text-[10px] text-[#00FF94] tracking-widest">{figLabel}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+    case 'calculator': {
+      const sectionTitle = (d.section_title as string) || 'Engineering Resources';
+      return (
+        <section id="projects" class="py-24 architect-section">
+          <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center mb-12 text-white">{sectionTitle}</h2>
+            <div class="max-w-4xl mx-auto glass-panel p-8 rounded-2xl border border-white/10">
+              <FunnelCalculator client:visible />
+            </div>
+          </div>
+        </section>
+      );
+    }
+    case 'survey': {
+      const sectionTitle = (d.section_title as string) || "Let's Build It Right.";
+      return (
+        <section id="contact" class="py-24 bg-black">
+          <div class="container mx-auto px-6">
+            <div class="max-w-3xl mx-auto">
+              <h2 class="text-3xl font-bold text-center mb-12 text-white">{sectionTitle}</h2>
+              <ScalingSurvey client:visible />
+            </div>
+          </div>
+        </section>
+      );
+    }
+    case 'cta': {
+      const heading = (d.heading as string) || 'Ready to Scale Predictably?';
+      const text = (d.text as string) || "Book a strategy call.";
+      const href = (d.href as string) || '#contact';
+      const label = (d.label as string) || 'Start Your Moat Audit';
+      return (
+        <section class="section light">
+          <CTA heading={heading} text={text} href={href} label={label} />
+        </section>
+      );
+    }
+    case 'social_proof': {
+      type Testimonial = { quote?: string; author?: string };
+      const testimonials = (d.testimonials as Testimonial[]) || [];
+      const logos = (d.logos as string[]) || [];
+      const title = (d.title as string) || 'Trusted By';
+      return (
+        <section class="py-24 architect-section">
+          <div class="container mx-auto px-6 max-w-4xl">
+            {title && <h2 class="text-2xl font-bold text-center mb-12 text-white">{title}</h2>}
+            {testimonials.length > 0 && (
+              <div class="space-y-8 mb-12">
+                {testimonials.map((t) => (
+                  <blockquote class="border-l-4 border-architect pl-6 py-4">
+                    <p class="text-lg text-white/80 italic">"{t.quote || ''}"</p>
+                    {t.author && <cite class="text-sm text-white/50 mt-2 block">— {t.author}</cite>}
+                  </blockquote>
+                ))}
+              </div>
+            )}
+            {logos.length > 0 && (
+              <div class="flex flex-wrap gap-8 justify-center items-center opacity-70">
+                {logos.map((logo) => (
+                  <span class="text-white/60 text-sm font-mono">{logo}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      );
+    }
+    case 'glass_card': {
+      const variant = (d.variant as string) || 'default';
+      const title = (d.title as string) || '';
+      const body = (d.body as string) || '';
+      return (
+        <section class="py-16 architect-section">
+          <div class="container mx-auto px-6">
+            <div class="glass-card p-8 max-w-4xl mx-auto">
+              {title && <h3 class="text-2xl font-bold text-white mb-4">{title}</h3>}
+              {body && <div class="text-white/70 prose prose-invert" set:html={body} />}
+            </div>
+          </div>
+        </section>
+      );
+    }
+    case 'bento_grid': {
+      const items = (d.items as BentoItem[]) || [];
+      return (
+        <section class="py-24 architect-section">
+          <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {items.map((item) => (
+                item.href ? (
+                  <a href={item.href} class="card-custom block p-6 border-architect/50 hover:border-architect transition">
+                    <h4 class="text-lg font-bold text-white mb-2">{item.title || ''}</h4>
+                    <p class="text-white/60 text-sm">{item.description || ''}</p>
+                  </a>
+                ) : (
+                  <div class="card-custom p-6">
+                    <h4 class="text-lg font-bold text-white mb-2">{item.title || ''}</h4>
+                    <p class="text-white/60 text-sm">{item.description || ''}</p>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+    case 'value_prop': {
+      const title = (d.title as string) || '';
+      const body = (d.body as string) || '';
+      const visualHtml = (d.visual_html as string) || '';
+      return (
+        <section class="py-24 bg-[#08080A]">
+          <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                {title && <h2 class="text-3xl font-bold text-white mb-6">{title}</h2>}
+                {body && <div class="text-white/70 prose prose-invert" set:html={body} />}
+              </div>
+              {visualHtml && <div class="rounded-xl overflow-hidden" set:html={visualHtml} />}
+            </div>
+          </div>
+        </section>
+      );
+    }
+    case 'pull_quote': {
+      const quote = (d.quote as string) || '';
+      const author = (d.author as string) || '';
+      return (
+        <section class="py-16 architect-section">
+          <div class="container mx-auto px-6 max-w-3xl">
+            <blockquote class="text-2xl md:text-3xl font-bold text-white/90 text-center">
+              "{quote}"
+            </blockquote>
+            {author && <cite class="block text-center text-white/50 mt-4">— {author}</cite>}
+          </div>
+        </section>
+      );
+    }
+    case 'icon_bullets': {
+      const title = (d.title as string) || '';
+      const bullets = (d.bullets as BulletItem[]) || [];
+      return (
+        <section class="py-24 architect-section">
+          <div class="container mx-auto px-6">
+            {title && <h2 class="text-2xl font-bold text-center mb-12 text-white">{title}</h2>}
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {bullets.map((b) => (
+                <div class="card-custom p-6">
+                  {b.icon && <span class="text-3xl mb-4 block">{b.icon}</span>}
+                  <h4 class="text-lg font-bold text-white mb-2">{b.title || ''}</h4>
+                  <p class="text-white/60 text-sm">{b.text || ''}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+    case 'related_services': {
+      const services = (d.services as BentoItem[]) || [];
+      return (
+        <section class="py-24 bg-[#08080A]">
+          <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-3 gap-8">
+              {services.map((s) => (
+                s.href ? (
+                  <a href={s.href} class="card-custom block p-6 border-white/10 hover:border-architect transition">
+                    <h4 class="text-lg font-bold text-white mb-2">{s.title || ''}</h4>
+                    <p class="text-white/60 text-sm">{s.description || ''}</p>
+                  </a>
+                ) : (
+                  <div class="card-custom p-6">
+                    <h4 class="text-lg font-bold text-white mb-2">{s.title || ''}</h4>
+                    <p class="text-white/60 text-sm">{s.description || ''}</p>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+    case 'animated_section': {
+      const title = (d.title as string) || '';
+      const body = (d.body as string) || '';
+      return (
+        <section class="py-24 architect-section animate-on-scroll">
+          <div class="container mx-auto px-6">
+            {title && <h2 class="text-2xl font-bold text-white mb-6">{title}</h2>}
+            {body && <div class="text-white/70 prose prose-invert" set:html={body} />}
+          </div>
+        </section>
+      );
+    }
+    default:
+      return null;
+  }
+})}

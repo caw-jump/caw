@@ -1,0 +1,88 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { searchArticles } from '../lib/dbLoader';
+
+const domain = Astro.locals.domain || Astro.request.headers.get('host') || 'chrisamaya.work';
+const siteUrl = domain.includes('://') ? domain : `https://${domain}`;
+
+const q = Astro.url.searchParams.get('q') ?? '';
+const trimmed = q.trim();
+
+const results = trimmed.length >= 2 ? await searchArticles(siteUrl, trimmed, 50) : [];
+---
+
+<BaseLayout
+  title={trimmed ? `Search: "${trimmed}" | Chris Amaya` : 'Search | Chris Amaya'}
+  description={trimmed && results.length > 0 ? `Found ${results.length} results for "${trimmed}".` : 'Search articles and insights.'}
+  palette="emerald"
+  fluid={true}
+>
+  <style>
+    .text-architect { color: #00FF94; }
+    .border-architect { border-color: rgba(0,255,148,0.3); }
+    .card-custom {
+      background-color: #0F0F0F;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 1rem;
+      padding: 2rem;
+      transition: border-color 0.3s ease;
+    }
+    .card-custom:hover { border-color: rgba(0,255,148,0.5); }
+    .search-input {
+      background-color: #0F0F0F;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      color: white;
+      width: 100%;
+      max-width: 32rem;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: #00FF94;
+    }
+  </style>
+
+  <div class="py-16">
+    <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">Search</h1>
+    <p class="text-white/70 mb-8">Search articles and insights.</p>
+
+    <form method="get" action="/search" class="mb-12">
+      <div class="flex gap-3 flex-wrap">
+        <input
+          type="search"
+          name="q"
+          class="search-input"
+          placeholder="Search..."
+          value={q}
+          minlength={2}
+          required
+        />
+        <button
+          type="submit"
+          class="px-6 py-3 rounded-lg bg-[#00FF94] text-[#050505] font-semibold hover:bg-[#00d97a] transition"
+        >
+          Search
+        </button>
+      </div>
+    </form>
+
+    {trimmed.length < 2 ? (
+      <p class="text-white/60">Enter at least 2 characters to search.</p>
+    ) : results.length === 0 ? (
+      <p class="text-white/60">No results found for "{trimmed}".</p>
+    ) : (
+      <ul class="space-y-6">
+        {results.map((result) => (
+          <li>
+            <a href={result.url} class="block card-custom border-architect/50 group">
+              <h2 class="text-xl font-semibold text-white group-hover:text-[#00FF94] transition">{result.title ?? result.slug ?? 'Untitled'}</h2>
+              {result.meta_description && <p class="text-white/70 mt-2 line-clamp-2">{result.meta_description}</p>}
+              <span class="text-sm text-[#00FF94]/80 mt-2 inline-block">{result.url}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</BaseLayout>

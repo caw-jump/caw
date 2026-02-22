@@ -1,0 +1,83 @@
+---
+---
+<nav class="sticky-toc">
+  <span class="toc-header">Table of Contents</span>
+  <ul id="toc-list">
+    <!-- Links will be injected via JS or manually added -->
+    <li><a href="#hook" class="active">01. The Concept</a></li>
+    <li><a href="#diagnosis">02. The Diagnosis</a></li>
+    <li><a href="#math">03. The Math</a></li>
+    <li><a href="#deep-dive">04. Technical Deep Dive</a></li>
+    <li><a href="#diy">05. Implementation</a></li>
+    <li><a href="#offer">06. The Solution</a></li>
+  </ul>
+</nav>
+
+<script>
+  // Simple intersection observer to highlight active section
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelectorAll('.sticky-toc a').forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${entry.target.id}`) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -50% 0px' });
+
+  // Observe all sections
+  document.querySelectorAll('section, h2').forEach((section) => {
+    if(section.id) observer.observe(section);
+  });
+</script>
+
+<style>
+  .sticky-toc {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+  }
+
+  .toc-header {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    margin-bottom: 0.75rem;
+  }
+
+  a {
+    color: #666;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 1rem;
+  }
+
+  a:hover, a.active {
+    color: #fbbf24; /* Gold */
+    border-left-color: #fbbf24;
+    padding-left: 1.25rem;
+  }
+</style>

@@ -1,0 +1,208 @@
+---
+// src/layouts/BaseLayout.astro - Updated master layout (single source of truth for ALL pages)
+import Navigation from '../components/ui/Navigation.astro';
+import Footer from '../components/ui/Footer.astro';
+import AtmosphereParticles from '../components/visuals/AtmosphereParticles.tsx';
+import { ViewTransitions } from 'astro:transitions';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  palette?: 'gold' | 'emerald' | 'sapphire';
+  canonical?: string;
+  ogImage?: string;
+  crumbs?: { name: string; url: string }[];
+  faqs?: { q: string; a: string }[];
+  noindex?: boolean;
+  fluid?: boolean;
+  /** From API: site name for branding (e.g. "Chris Amaya") */
+  siteName?: string;
+  /** From API: nav structure for Navigation */
+  nav?: { portfolio?: { name: string; href: string }[]; custom_apps?: { name: string; href: string }[]; cta?: { label: string; href: string } };
+  /** From API: footer content */
+  footer?: { tagline?: string; copyright?: string };
+  /** Optional Local SEO schema overrides from theme_config */
+  localSeo?: {
+    person?: Record<string, unknown>;
+    service?: Record<string, unknown>;
+    address?: { locality?: string; region?: string; postalCode?: string };
+    areaServed?: string;
+  };
+}
+
+const {
+  title,
+  description,
+  palette = 'emerald',
+  canonical,
+  ogImage = '/og-default.png',
+  crumbs = [],
+  faqs = [],
+  noindex = false,
+  fluid = false,
+  siteName = 'Chris Amaya',
+  nav,
+  footer: footerData,
+  localSeo,
+} = Astro.props;
+
+const siteUrl = Astro.site ? new URL(Astro.site).origin : 'https://chrisamaya.work';
+const fullTitle = title === siteName ? title : `${title} | ${siteName}`;
+const canonicalUrl = canonical ? new URL(canonical, siteUrl).href : new URL(Astro.url.pathname, siteUrl).href;
+const ogImageUrl = ogImage.startsWith('http') ? ogImage : new URL(ogImage, siteUrl).href;
+
+const org = {"@type":"Organization","name":siteName,"url":siteUrl,"logo":`${siteUrl}/favicon.svg`,"description":description,"contactPoint":{"@type":"ContactPoint","contactType":"Sales","url":`${siteUrl}/#contact`}};
+const webSite = {"@type":"WebSite","url":siteUrl,"name":siteName,"potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":`${siteUrl}/search?q={search_term_string}`},"query-input":"required name=search_term_string"}};
+const breadcrumb = crumbs.length > 0 ? {"@type":"BreadcrumbList","itemListElement":crumbs.map((c,i)=>({"@type":"ListItem","position":i+1,"name":c.name,"item":new URL(c.url,siteUrl).href}))} : null;
+const faqSchema = faqs.length > 0 ? {"@type":"FAQPage","mainEntity":faqs.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))} : null;
+const mainEntity = {"@type":"WebPage","name":title,"description":description,"url":canonicalUrl};
+
+// Local SEO: Person (sole proprietor) + Service
+const personSchema = localSeo?.person ?? {"@type":"Person","name":siteName,"url":siteUrl,"description":"Full-stack developer building custom SaaS, private AI systems, and headless architecture.","image":`${siteUrl}/favicon.svg`};
+const address = localSeo?.address ? {"@type":"Address","addressLocality":localSeo.address.locality,"addressRegion":localSeo.address.region,"postalCode":localSeo.address.postalCode} : undefined;
+if (address && personSchema && typeof personSchema === 'object' && !Array.isArray(personSchema)) {
+  (personSchema as Record<string, unknown>).address = address;
+}
+if (localSeo?.areaServed && personSchema && typeof personSchema === 'object' && !Array.isArray(personSchema)) {
+  (personSchema as Record<string, unknown>).areaServed = localSeo.areaServed;
+}
+const serviceSchema = localSeo?.service ?? {"@type":"Service","name":"Unicorn Developer","provider":{"@type":"Person","name":siteName},"description":"Custom full-stack applications, private AI systems, headless architecture, and Zapier replacements.","areaServed":localSeo?.areaServed ?? "worldwide"};
+
+const graph = [org, webSite, personSchema, serviceSchema];
+if (breadcrumb) graph.push(breadcrumb);
+if (faqSchema) graph.push(faqSchema);
+graph.push(mainEntity);
+---
+
+<!DOCTYPE html>
+<html lang="en" data-palette={palette}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+    <link rel="icon" type="image/svg+xml" href={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/favicon.svg`} />
+    <meta name="theme-color" content="#050505" />
+
+    <!-- Fonts: system stack only (no CDN) -->
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex ? <meta name="robots" content="noindex" /> : <meta name="robots" content="index,follow,max-image-preview:large" />}
+
+    <!-- Open Graph / Twitter -->
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify({"@context":"https://schema.org","@graph":graph})} />
+
+    <ViewTransitions />
+    <slot name="head" />
+  </head>
+
+  <body class="min-h-screen bg-bg-deep text-text-primary antialiased font-sans">
+    
+    <!-- Scroll Progress -->
+    <div id="scroll-progress" class="fixed top-0 left-0 h-[3px] bg-gradient-to-r from-[#FFE5A0] to-[#E8C677] z-[100] w-0 transition-all duration-100 ease-out"></div>
+
+    <Navigation currentPath={Astro.url.pathname} nav={nav} siteName={siteName} />
+
+    <main class="relative z-10 pt-20">
+        <!-- Breadcrumbs on subpages -->
+        {crumbs.length > 0 && (
+          <div class="container mx-auto px-6">
+            <nav aria-label="breadcrumb" class="py-8">
+              <ol class="flex flex-wrap items-center gap-3 text-sm text-white/70">
+                {crumbs.map((crumb, i) => (
+                  <li class="flex items-center gap-3">
+                    <a href={crumb.url} class="hover:text-accent transition">{crumb.name}</a>
+                    {i < crumbs.length - 1 && <span class="text-white/30">/</span>}
+                  </li>
+                ))}
+                <li class="text-white font-medium">{title}</li>
+              </ol>
+            </nav>
+          </div>
+        )}
+
+        {/* Support fluid layouts for services/landing pages */}
+        {fluid ? (
+          <slot />
+        ) : (
+          <div class="container mx-auto px-6">
+            <slot />
+          </div>
+        )}
+    </main>
+
+    <Footer footer={footerData} siteName={siteName} />
+
+    <!-- Particles Container -->
+    <div class="particles fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
+
+    <!-- Global Interaction Logic -->
+    <script is:inline>
+        // 1. SCROLL PROGRESS & NAV BLUR
+        const progress = document.getElementById('scroll-progress');
+        const nav = document.getElementById('navbar');
+        
+        function updateScroll() {
+            // Navbar blur
+            if (window.scrollY > 50) nav?.classList.add('nav-scrolled');
+            else nav?.classList.remove('nav-scrolled');
+
+            // Progress Bar
+            if (progress) {
+                const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+                const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrolled = (winScroll / height) * 100;
+                progress.style.width = scrolled + "%";
+            }
+        }
+
+        window.addEventListener('scroll', updateScroll, { passive: true });
+
+        // 2. PARTICLES
+        const particlesContainer = document.querySelector('.particles');
+        if (particlesContainer && particlesContainer.children.length === 0) {
+            for(let i=0; i<40; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.cssText = `
+                    left: ${Math.random() * 100}%;
+                    animation-delay: ${Math.random() * 5}s;
+                    animation-duration: ${10 + Math.random() * 20}s;
+                `;
+                particlesContainer.appendChild(p);
+            }
+        }
+
+        // 3. ANIMATION OBSERVER
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        // Initial observe
+        document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+        
+        // Setup on page load/transition
+        document.addEventListener('astro:page-load', () => {
+             updateScroll();
+             document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+        });
+    </script>
+  </body>
+</html>

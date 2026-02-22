@@ -1,0 +1,57 @@
+---
+// src/components/ui/Footer.astro - DB-driven when footer prop provided
+interface Props {
+  footer?: { tagline?: string; copyright?: string };
+  siteName?: string;
+}
+
+const { footer, siteName = 'Chris Amaya' } = Astro.props;
+const currentYear = new Date().getFullYear();
+const MAIN_SITE = 'https://jumpstartscaling.com';
+const tagline = footer?.tagline ?? 'The Unicorn Developer.';
+const copyrightName = footer?.copyright ?? siteName;
+---
+
+<footer class="relative z-10 pt-32 pb-12 border-t border-white/5 bg-[#050505]">
+    <div class="container mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
+            <div class="col-span-1 md:col-span-1">
+                <a href="/" class="flex items-center gap-3 mb-8">
+                    <div class="w-10 h-10 bg-[#00FF94] rounded flex items-center justify-center text-black font-black">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    </div>
+                    <span class="font-bold text-xl text-white">{siteName.split(' ')[0]}<span class="text-[#00FF94]">{siteName.split(' ').slice(1).join(' ') || ''}</span></span>
+                </a>
+                <p class="text-white/40 text-sm leading-relaxed">{tagline}</p>
+            </div>
+            <div>
+                <h4 class="text-xs font-mono uppercase tracking-widest text-[#E8C677] mb-8">Capabilities</h4>
+                <ul class="space-y-4 text-sm text-white/50">
+                    <li><a href={`${MAIN_SITE}/services/paid-acquisition`} class="hover:text-white transition">Paid Acquisition</a></li>
+                    <li><a href={`${MAIN_SITE}/services/funnel-architecture`} class="hover:text-white transition">Funnel Architecture</a></li>
+                    <li><a href={`${MAIN_SITE}/services/crm-transformation`} class="hover:text-white transition">CRM Transformation</a></li>
+                    <li><a href={`${MAIN_SITE}/services/growth-retainer`} class="hover:text-white transition">Growth Retainer</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-xs font-mono uppercase tracking-widest text-[#E8C677] mb-8">Resources</h4>
+                <ul class="space-y-4 text-sm text-white/50">
+                    <li><a href={`${MAIN_SITE}/intel`} class="hover:text-white transition">Intel & Insights</a></li>
+                    <li><a href={`${MAIN_SITE}/audit`} class="hover:text-white transition">Moat Audit</a></li>
+                    <li><a href={`${MAIN_SITE}/resources/calculators`} class="hover:text-white transition">ROI Calculators</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-xs font-mono uppercase tracking-widest text-[#E8C677] mb-8">Direct</h4>
+                <a href="mailto:hello@jumpstartscaling.com" class="text-white hover:text-[#E8C677] transition-colors font-medium">hello@jumpstartscaling.com</a>
+            </div>
+        </div>
+        <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p class="text-white/30 text-xs">&copy; {currentYear} {copyrightName}. All rights reserved.</p>
+            <div class="flex gap-8 text-white/30 text-xs">
+                <a href={`${MAIN_SITE}/terms`} class="hover:text-white transition">Terms</a>
+                <a href={`${MAIN_SITE}/privacy`} class="hover:text-white transition">Privacy</a>
+            </div>
+        </div>
+    </div>
+</footer>

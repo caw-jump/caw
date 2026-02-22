@@ -1,0 +1,19 @@
+---
+interface Props{heading?:string;text?:string;href?:string;label?:string}
+const{heading='Ready to Scale Predictably?',text='Book a strategy call — we\'ll audit your current setup and map your path to domination.',href='/audit',label='Start Your Moat Audit'}=Astro.props;
+---
+<section class="cta-section">
+<div class="glass-card cta-card">
+<h2 class="cta-heading"><span class="gradient-text">{heading}</span></h2>
+<p class="cta-text">{text}</p>
+<a href={href} class="cta-btn">{label}</a>
+</div>
+</section>
+<style>
+.cta-section{padding:4rem 1.5rem;text-align:center}
+.cta-card{max-width:700px;margin:0 auto;padding:3rem 2rem}
+.cta-heading{font-size:clamp(1.75rem,3.5vw,2.5rem);font-weight:800;margin:0 0 1rem}
+.cta-text{color:var(--text-secondary);font-size:1.15rem;margin:0 0 2rem;line-height:1.6}
+.cta-btn{display:inline-block;padding:1rem 2.5rem;background:var(--gradient-accent);color:#050505;font-weight:700;font-size:1.1rem;border-radius:0.75rem;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,169,97,0.3)}
+</style>

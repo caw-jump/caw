@@ -1,0 +1,99 @@
+---
+---
+<div class="orbit-container">
+  <div class="core">
+    <span class="logo">JS</span>
+  </div>
+  
+  <div class="orbit orbit-1">
+    <div class="planet p1">HubSpot</div>
+    <div class="planet p2">Google</div>
+  </div>
+  
+  <div class="orbit orbit-2">
+    <div class="planet p3">Meta</div>
+    <div class="planet p4">Shopify</div>
+    <div class="planet p5">TikTok</div>
+  </div>
+</div>
+
+<style>
+  .orbit-container {
+    width: 300px;
+    max-width: 100%;
+    overflow-x: hidden;
+    height: 300px;
+    position: relative;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .core {
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, #C9A961 0%, #8a733e 100%);
+    border-radius: 50%;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 30px rgba(201, 169, 97, 0.4);
+    font-weight: 900;
+    color: #000;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .orbit {
+    position: absolute;
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 50%;
+    animation: spin linear infinite;
+  }
+
+  .orbit-1 {
+    width: 180px;
+    height: 180px;
+    animation-duration: 20s;
+  }
+
+  .orbit-2 {
+    width: 280px;
+    height: 280px;
+    animation-duration: 35s;
+    animation-direction: reverse;
+  }
+
+  .planet {
+    position: absolute;
+    background: #000;
+    border: 1px solid #333;
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    white-space: nowrap;
+    animation: counter-spin linear infinite;
+  }
+
+  .p1 { top: 50%; left: -20px; }
+  .p2 { top: 50%; right: -20px; }
+  .p3 { top: 0; left: 50%; transform: translate(-50%, -50%); }
+  .p4 { bottom: 30px; left: 30px; }
+  .p5 { bottom: 30px; right: 30px; }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Counter-spin keeps text upright */
+  .orbit-1 .planet { animation-duration: 20s; }
+  .orbit-2 .planet { animation-duration: 35s; animation-direction: reverse; }
+
+  @keyframes counter-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(-360deg); }
+  }
+</style>

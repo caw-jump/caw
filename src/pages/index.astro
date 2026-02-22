@@ -1,0 +1,41 @@
+---
+// DB-driven homepage - direct Postgres
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BlockRenderer from '../components/BlockRenderer.astro';
+import { getPageData } from '../lib/dbLoader';
+
+const domain = Astro.locals.domain || Astro.request.headers.get('host') || 'chrisamaya.work';
+const siteUrl = domain.includes('://') ? domain : `https://${domain}`;
+
+const pageData = await getPageData(siteUrl, '');
+
+if (!pageData) {
+  return Astro.redirect('/404');
+}
+
+const { page, blocks, palette, nav, footer, local_seo } = pageData;
+const themeConfig = (Astro.locals.themeConfig as Record<string, unknown>) || {};
+const siteName = (themeConfig.site_name as string) || (footer as { copyright?: string })?.copyright || 'Chris Amaya';
+---
+
+<BaseLayout
+  title={page.title || 'The One-Stop Architect | Chris Amaya'}
+  description="Stop hiring freelancers. Start building an empire. The 'Unicorn Developer' who builds full-stack applications, engineers private AI systems, and automates your entire backend."
+  palette={palette as 'gold' | 'emerald' | 'sapphire'}
+  fluid={true}
+  siteName={siteName}
+  nav={nav as { portfolio?: { name: string; href: string }[]; cta?: { label: string; href: string } }}
+  footer={footer as { tagline?: string; copyright?: string }}
+  localSeo={local_seo as { person?: Record<string, unknown>; service?: Record<string, unknown>; address?: { locality?: string; region?: string; postalCode?: string }; areaServed?: string } | undefined}
+>
+  <style>
+    .architect-section { background-color: #050505; color: #fff; }
+    .text-architect { color: #00FF94; }
+    .border-architect { border-color: rgba(0,255,148,0.3); }
+    .bg-architect-dim { background-color: rgba(0,255,148,0.05); }
+    .card-custom { background-color: #0F0F0F; border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 2rem; transition: border-color 0.3s ease; }
+    .card-custom:hover { border-color: rgba(0,255,148,0.5); }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+  <BlockRenderer blocks={blocks} />
+</BaseLayout>

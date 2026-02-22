@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getArticles } from '../../lib/dbLoader';
+
+const domain = Astro.locals.domain || Astro.request.headers.get('host') || 'chrisamaya.work';
+const siteUrl = domain.includes('://') ? domain : `https://${domain}`;
+
+const articles = await getArticles(siteUrl);
+---
+
+<BaseLayout
+  title="Articles | Chris Amaya"
+  description="Factory-generated articles and insights."
+  palette="emerald"
+  fluid={true}
+>
+  <style>
+    .text-architect { color: #00FF94; }
+    .border-architect { border-color: rgba(0,255,148,0.3); }
+    .bg-architect-dim { background-color: rgba(0,255,148,0.05); }
+    .card-custom {
+      background-color: #0F0F0F;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 1rem;
+      padding: 2rem;
+      transition: border-color 0.3s ease;
+    }
+    .card-custom:hover { border-color: rgba(0,255,148,0.5); }
+  </style>
+
+  <div class="py-16">
+    <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">Articles</h1>
+    <p class="text-white/70 mb-12">Factory-generated content and insights.</p>
+
+    {articles.length === 0 ? (
+      <p class="text-white/60">No articles yet.</p>
+    ) : (
+      <ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {articles.map((article) => (
+          <li>
+            <a href={`/articles/${article.slug}`} class="block card-custom border-architect/50 h-full group">
+              <h2 class="text-xl font-semibold text-white group-hover:text-[#00FF94] transition">{article.title ?? article.slug ?? 'Untitled'}</h2>
+              {article.meta_description && <p class="text-white/70 mt-2 line-clamp-2">{article.meta_description}</p>}
+              <time class="text-sm text-white/50 mt-3 block" datetime={article.date_created ?? ''}>
+                {article.date_created ? new Date(article.date_created).toLocaleDateString() : ''}
+              </time>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</BaseLayout>

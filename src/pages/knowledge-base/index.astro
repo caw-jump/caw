@@ -1,0 +1,110 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getArticles, getKbCategories, getKbTags } from '../../lib/dbLoader';
+
+const domain = Astro.locals.domain || Astro.request.headers.get('host') || 'chrisamaya.work';
+const siteUrl = domain.includes('://') ? domain : `https://${domain}`;
+
+const [articles, categories, tags] = await Promise.all([
+  getArticles(siteUrl),
+  getKbCategories(siteUrl),
+  getKbTags(siteUrl),
+]);
+
+function formatDate(d: string | null): string {
+  if (!d) return '';
+  try {
+    return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  } catch {
+    return '';
+  }
+}
+---
+
+<BaseLayout
+  title="Knowledge Base | Chris Amaya"
+  description="Articles, insights, and guides on custom SaaS, private AI, headless architecture, and growth engineering."
+  palette="emerald"
+  fluid={true}
+>
+  <style>
+    .text-architect { color: #00FF94; }
+    .border-architect { border-color: rgba(0,255,148,0.3); }
+    .bg-architect-dim { background-color: rgba(0,255,148,0.05); }
+    .card-custom {
+      background-color: #0F0F0F;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 1rem;
+      padding: 2rem;
+      transition: border-color 0.3s ease;
+    }
+    .card-custom:hover { border-color: rgba(0,255,148,0.5); }
+    .tag-pill { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 0.5rem; background: rgba(0,255,148,0.15); color: #00FF94; }
+  </style>
+
+  <div class="bg-black min-h-screen">
+    <section class="pt-24 pb-12 border-b border-white/10">
+      <div class="container mx-auto px-6 text-center">
+        <h1 class="text-4xl md:text-5xl font-black text-white mb-4">Knowledge Base</h1>
+        <p class="text-xl text-white/70 max-w-2xl mx-auto">Articles, insights, and guides on custom SaaS, private AI, and growth engineering.</p>
+      </div>
+    </section>
+
+    <div class="container mx-auto px-6 py-16 flex flex-col lg:flex-row gap-12">
+      {(categories.length > 0 || tags.length > 0) && (
+        <aside class="lg:w-64 flex-shrink-0">
+          <div class="space-y-8 sticky top-24">
+            {categories.length > 0 && (
+              <div>
+                <h3 class="text-sm font-bold text-white/80 uppercase tracking-wider mb-3">Categories</h3>
+                <ul class="space-y-2">
+                  <li><a href="/knowledge-base" class="text-white/60 hover:text-architect transition">All</a></li>
+                  {categories.map((c) => (
+                    <li><a href={`/knowledge-base/category/${encodeURIComponent(c)}`} class="text-white/60 hover:text-architect transition">{c}</a></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {tags.length > 0 && (
+              <div>
+                <h3 class="text-sm font-bold text-white/80 uppercase tracking-wider mb-3">Tags</h3>
+                <div class="flex flex-wrap gap-2">
+                  {tags.slice(0, 20).map((t) => (
+                    <a href={`/knowledge-base/tag/${encodeURIComponent(t)}`} class="tag-pill hover:bg-architect/25 transition">{t}</a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </aside>
+      )}
+      <main class="flex-1 min-w-0">
+        {articles.length === 0 ? (
+          <p class="text-white/60">No articles yet.</p>
+        ) : (
+          <ul class="space-y-8">
+            {articles.map((a) => (
+              <li>
+                <a href={`/articles/${a.slug}`} class="block card-custom border-architect/50 group">
+                  <div class="flex flex-col md:flex-row md:items-start gap-4">
+                    <div class="md:w-1/4 flex-shrink-0 text-architect/80 font-mono text-sm">
+                      {formatDate(a.date_created)}
+                    </div>
+                    <div class="md:flex-1">
+                      <h2 class="text-xl font-bold text-white group-hover:text-architect transition">{a.title ?? a.slug ?? 'Untitled'}</h2>
+                      {a.meta_description && <p class="text-white/70 mt-2 line-clamp-2">{a.meta_description}</p>}
+                      <div class="flex flex-wrap gap-2 mt-3">
+                        {a.category && <span class="tag-pill">{a.category}</span>}
+                        {Array.isArray(a.tags) && a.tags.slice(0, 3).map((t) => <span class="tag-pill opacity-80">{t}</span>)}
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
+    </div>
+  </div>
+</BaseLayout>

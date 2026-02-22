@@ -1,0 +1,71 @@
+---
+---
+<div class="chart-wrapper">
+  <h3>Revenue Velocity</h3>
+  <svg viewBox="0 0 300 150" class="chart-svg">
+    <!-- Grid -->
+    <line x1="0" y1="140" x2="300" y2="140" stroke="#333" stroke-width="1" />
+    <line x1="0" y1="100" x2="300" y2="100" stroke="#222" stroke-width="1" stroke-dasharray="4" />
+    <line x1="0" y1="60" x2="300" y2="60" stroke="#222" stroke-width="1" stroke-dasharray="4" />
+    
+    <!-- Flat Line (Traditional) -->
+    <path d="M0 130 C 50 128, 100 125, 150 120" stroke="#666" stroke-width="2" fill="none" stroke-dasharray="4" />
+    <text x="100" y="110" font-size="10" fill="#666">Traditional Agency</text>
+
+    <!-- Growth Line (Jumpstart) -->
+    <path d="M0 130 C 80 130, 120 100, 300 10" stroke="#C9A961" stroke-width="3" fill="none" class="growth-line" />
+    
+    <!-- Points -->
+    <circle cx="0" cy="130" r="3" fill="#C9A961" />
+    <circle cx="280" cy="20" r="4" fill="#C9A961" class="pulse-dot" />
+  </svg>
+</div>
+
+<style>
+  .chart-wrapper {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  h3 {
+    color: #fff;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .chart-svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .growth-line {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    animation: draw 2s ease-out forwards;
+    filter: drop-shadow(0 0 5px rgba(201, 169, 97, 0.5));
+    will-change: stroke-dashoffset;
+  }
+
+  .pulse-dot {
+    animation: pulse 1s infinite alternate;
+    transform-origin: center;
+    will-change: transform, opacity;
+  }
+
+  @keyframes draw {
+    to { stroke-dashoffset: 0; }
+  }
+
+  @keyframes pulse {
+    from { transform: scale(1); opacity: 1; }
+    to { transform: scale(1.5); opacity: 0.5; }
+  }
+</style>

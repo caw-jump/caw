@@ -1,0 +1,27 @@
+---
+const GA_ID='G-XXXXXXXXXX';
+const META_PIXEL_ID='XXXXXXXXXX';
+const TIKTOK_PIXEL_ID='XXXXXXXXXX';
+const PINTEREST_TAG_ID='XXXXXXXXXX';
+const X_TAG_ID='XXXXXXXXXX';
+---
+<script is:inline define:vars={{GA_ID}}>
+(function(){var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID;document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function g(){dataLayer.push(arguments)}g('js',new Date());g('config',GA_ID,{anonymize_ip:true})})();
+</script>
+<script is:inline define:vars={{META_PIXEL_ID}}>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init',META_PIXEL_ID);fbq('track','PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" src={"https://www.facebook.com/tr?id="+META_PIXEL_ID+"&ev=PageView&noscript=1"}/></noscript>
+<script is:inline define:vars={{TIKTOK_PIXEL_ID}}>
+!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript";o.async=!0;o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load(TIKTOK_PIXEL_ID);ttq.page()}(window,document,'ttq');
+</script>
+<script is:inline define:vars={{PINTEREST_TAG_ID}}>
+!function(e){if(!window.pintrk){window.pintrk=function(){window.pintrk.queue.push(Array.prototype.slice.call(arguments))};var n=window.pintrk;n.queue=[],n.version="3.0";var t=document.createElement("script");t.async=!0,t.src=e;var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(t,r)}}("https://s.pinimg.com/ct/core.js");pintrk('load',PINTEREST_TAG_ID);pintrk('page');
+</script>
+<noscript><img height="1" width="1" style="display:none" alt="" src={"https://ct.pinterest.com/v3/?tid="+PINTEREST_TAG_ID+"&event=pagevisit&noscript=1"}/></noscript>
+<script is:inline define:vars={{X_TAG_ID}}>
+!function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments)},s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-twitter.com/uwt.js',a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');twq('config',X_TAG_ID);
+</script>
+<meta name="google-site-verification" content="YOUR_GSC_CODE"/>
+<meta name="msvalidate.01" content="YOUR_BING_CODE"/>
+<meta name="p:domain_verify" content="YOUR_PINTEREST_CODE"/>
