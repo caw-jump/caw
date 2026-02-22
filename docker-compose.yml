@@ -1,0 +1,23 @@
+# Optional: local Postgres for dev when you can't reach Coolify's internal DB.
+# Production/Coolify: use DATABASE_URL from god-mode-api (same Postgres).
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: chrisamaya
+      POSTGRES_USER: caw
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-caw_local}
+    ports:
+      - "5433:5432"
+    volumes:
+      - chrisamaya_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U caw -d chrisamaya"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  chrisamaya_pgdata:

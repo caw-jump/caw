@@ -11,6 +11,14 @@
     --text-light: #050505;
     --text-muted: rgba(255, 255, 255, 0.60);
 
+    /* Cyberpunk / Architect theme */
+    --neon-green: #00FF94;
+    --neon-blue: #00B8FF;
+    --neon-pink: #FF00FF;
+    --void-black: #050505;
+    --terminal-bg: #0A0A0A;
+    --grid-color: rgba(0, 255, 148, 0.05);
+
     /* Gold Accents */
     --accent: #E8C677;
     --accent-glow: #FFE5A0;
@@ -250,3 +258,123 @@ img {
     height: auto;
     border-radius: inherit;
 }
+
+/* =========================================
+   CYBERPUNK / ARCHITECT UTILITIES
+   ========================================= */
+.text-neon {
+    color: var(--neon-green);
+    text-shadow: 0 0 10px rgba(0, 255, 148, 0.5);
+}
+.text-cyber-blue { color: var(--neon-blue); }
+.text-cyber-pink { color: var(--neon-pink); }
+.bg-terminal {
+    background-color: var(--terminal-bg);
+    border: 1px solid #333;
+}
+.cyber-border {
+    border: 1px solid rgba(0, 255, 148, 0.2);
+    transition: all 0.3s ease;
+}
+.cyber-border:hover {
+    border-color: var(--neon-green);
+    box-shadow: 0 0 15px rgba(0, 255, 148, 0.2);
+}
+
+/* Glitch / Cyber Button */
+.btn-cyber {
+    background: transparent;
+    border: 1px solid var(--neon-green);
+    color: var(--neon-green);
+    font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 15px 30px;
+    position: relative;
+    overflow: hidden;
+    transition: 0.2s;
+    z-index: 10;
+    display: inline-block;
+    text-decoration: none;
+    cursor: pointer;
+}
+.btn-cyber:hover {
+    background: var(--neon-green);
+    color: #000;
+    box-shadow: 0 0 20px var(--neon-green);
+    transform: scale(1.02);
+}
+.btn-cyber::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: 0.5s;
+}
+.btn-cyber:hover::before { left: 100%; }
+
+/* Grid Background */
+.bg-grid {
+    background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.3;
+}
+
+/* Section Padding */
+.section-padding {
+    padding: 100px 0;
+}
+
+/* Tech Cards (Sovereign Infrastructure) */
+.card-tech {
+    background: rgba(10, 10, 10, 0.8);
+    border-left: 3px solid var(--neon-blue);
+    padding: 2rem;
+    position: relative;
+}
+.card-tech::after {
+    content: "SYSTEM_READY";
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 0.6rem;
+    color: var(--neon-blue);
+    font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+    opacity: 0.5;
+}
+
+/* Terminal Window */
+.terminal-window {
+    background: #000;
+    border: 1px solid #333;
+    border-radius: 5px;
+    font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+    padding: 20px;
+    color: #0f0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.terminal-header {
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.terminal-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.terminal-dot-r { background: #ff5f56; }
+.terminal-dot-y { background: #ffbd2e; }
+.terminal-dot-g { background: #27c93f; }

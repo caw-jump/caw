@@ -60,18 +60,190 @@ const { blocks } = Astro.props;
       const ctaHref = (d.cta_href as string) || '#contact';
       const warningText = (d.warning_text as string) || '';
       return (
-        <section class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20 architect-section">
+        <section id="hook" class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20 architect-section">
+          <div class="bg-grid" />
           <div class="container mx-auto px-6 relative z-10 text-center">
             {badge && (
-              <span class="inline-block font-mono text-sm uppercase tracking-[0.2em] mb-6 px-4 py-2 rounded border border-architect bg-architect-dim text-architect">
+              <span class="inline-block font-mono text-sm uppercase tracking-[0.2em] mb-6 px-4 py-2 border border-[#00FF94]/50 bg-architect-dim text-neon">
                 {badge}
               </span>
             )}
-            <h1 class="text-5xl md:text-7xl font-black text-white mb-8 leading-tight" set:html={headline} />
-            {subhead && <p class="text-xl md:text-2xl text-white/70 max-w-4xl mx-auto mb-12">{subhead}</p>}
-            <CTA label={ctaLabel} href={ctaHref} />
+            <h1 class="text-5xl md:text-7xl font-black text-white mb-8 leading-tight" style="letter-spacing: -3px" set:html={headline} />
+            {subhead && <p class="text-xl md:text-2xl text-white/70 max-w-3xl mx-auto mb-12 font-mono whitespace-pre-line">{subhead}</p>}
+            <a href={ctaHref} class="btn-cyber">{ctaLabel}</a>
             {warningText && <p class="font-mono text-xs text-white/50 mt-8">{warningText}</p>}
           </div>
+        </section>
+      );
+    }
+    case 'terminal_problem': {
+      const eyebrow = (d.eyebrow as string) || '';
+      const title = (d.title as string) || '';
+      const body = (d.body as string) || '';
+      const bullets = (d.bullets as string[]) || [];
+      const terminalLogs = (d.terminal_logs as { time?: string; msg?: string }[]) || [];
+      const statusText = (d.status_text as string) || '';
+      return (
+        <section class="section-padding border-t border-white/10 bg-terminal">
+          <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div>
+                {eyebrow && <span class="text-cyber-pink font-mono block mb-3">{eyebrow}</span>}
+                <h2 class="text-3xl md:text-5xl font-bold text-white mb-4">{title}</h2>
+                {body && <p class="text-lg text-white/70 mb-6">{body}</p>}
+                <hr class="border-white/20 my-6" />
+                {bullets.length > 0 && (
+                  <ul class="list-none space-y-3 font-mono text-red-400">
+                    {bullets.map((b) => <li>{b}</li>)}
+                  </ul>
+                )}
+              </div>
+              <div class="terminal-window">
+                <div class="terminal-header">
+                  <span class="terminal-dot terminal-dot-r" />
+                  <span class="terminal-dot terminal-dot-y" />
+                  <span class="terminal-dot terminal-dot-g" />
+                  <span class="ml-2 text-white/50 text-sm">server_logs.txt</span>
+                </div>
+                <div class="font-mono text-sm">
+                  {terminalLogs.map((log) => (
+                    <div class="mb-2">
+                      <span class="text-white/50">{log.time || ''}</span> {log.msg || ''}
+                    </div>
+                  ))}
+                  {statusText && <div class="mt-3 text-neon">{statusText}</div>}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+    case 'solution_cards': {
+      const eyebrow = (d.eyebrow as string) || '';
+      const title = (d.title as string) || '';
+      const cards = (d.cards as { title?: string; body?: string; border_color?: string }[]) || [];
+      const borderColor = (c: { border_color?: string }) =>
+        c.border_color === 'neon-green' ? 'var(--neon-green)' : c.border_color === 'neon-pink' ? 'var(--neon-pink)' : 'var(--neon-blue)';
+      return (
+        <section id="solution" class="section-padding bg-black relative">
+          <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+              {eyebrow && <span class="text-cyber-blue font-mono block mb-2">{eyebrow}</span>}
+              <h2 class="text-white text-2xl md:text-3xl font-bold">{title}</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {cards.map((c) => (
+                <div class="card-tech h-full cyber-border" style={`border-left-color: ${borderColor(c)}`}>
+                  <h3 class="text-white text-lg font-bold mb-3" set:html={c.title || ''} />
+                  <p class="text-white/70 text-sm">{c.body || ''}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+    case 'authority': {
+      const title = (d.title as string) || '';
+      const body = (d.body as string) || '';
+      const stats = (d.stats as { value?: string; label?: string }[]) || [];
+      return (
+        <section class="section-padding bg-terminal">
+          <div class="container mx-auto px-6">
+            <div class="max-w-3xl mx-auto text-center">
+              <h2 class="text-white text-2xl md:text-4xl font-bold mb-6" set:html={title} />
+              {body && <div class="text-white/70 mb-8 prose prose-invert max-w-none" set:html={body} />}
+              {stats.length > 0 && (
+                <div class="flex justify-center gap-12 font-mono text-neon border-t border-b border-white/10 py-6">
+                  {stats.map((s) => (
+                    <div>
+                      <div class="text-2xl font-bold mb-0">{s.value || ''}</div>
+                      <div class="text-sm text-white/60">{s.label || ''}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      );
+    }
+    case 'audit_form': {
+      const title = (d.title as string) || 'Technical Strategy Session';
+      const subhead = (d.subhead as string) || "Let's audit your stack and find the bottleneck.";
+      const formTitle = (d.form_title as string) || 'INITIATE_HANDSHAKE_PROTOCOL';
+      const submitSource = (d.submit_source as string) || 'ChrisAmayaWork';
+      return (
+        <section id="audit" class="section-padding relative overflow-hidden">
+          <div class="absolute bottom-0 right-0 p-8 opacity-10 hidden md:block">
+            <h1 class="text-6xl font-bold text-white">BUILD</h1>
+          </div>
+          <div class="container mx-auto px-6 relative z-10">
+            <div class="max-w-xl mx-auto">
+              <div class="bg-black border border-white/10 p-8 shadow-lg cyber-border">
+                <div class="text-center mb-6">
+                  <h3 class="text-white uppercase text-lg font-bold">{title}</h3>
+                  <p class="text-white/60 text-sm font-mono mt-1">{subhead}</p>
+                </div>
+                <form id="architectForm" class="space-y-4">
+                  <div>
+                    <label class="text-neon font-mono text-xs uppercase block mb-1">Root User ID (Name)</label>
+                    <input type="text" name="name" required placeholder="John Doe" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2" />
+                  </div>
+                  <div>
+                    <label class="text-neon font-mono text-xs uppercase block mb-1">Communication Link (Email)</label>
+                    <input type="email" name="email" required placeholder="john@agency.com" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2" />
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="text-neon font-mono text-xs uppercase block mb-1">Load (Revenue)</label>
+                      <select name="revenue" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2">
+                        <option value="500k-1m">$500k - $1M</option>
+                        <option value="1m-3m">$1M - $3M</option>
+                        <option value="3m+">$3M+</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-neon font-mono text-xs uppercase block mb-1">Budget</label>
+                      <select name="budget" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2">
+                        <option value="10k+">$10k+</option>
+                        <option value="25k+">$25k+</option>
+                        <option value="50k+">$50k+</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-neon font-mono text-xs uppercase block mb-1">System Error (The Problem)</label>
+                    <textarea name="problem" rows={3} placeholder="What is currently breaking?" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2" />
+                  </div>
+                  <button type="submit" class="btn-cyber w-full">{formTitle}</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <script define:vars={{ submitSource }}>
+            document.getElementById('architectForm')?.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const form = e.target;
+              const btn = form.querySelector('button');
+              const orig = btn.innerText;
+              btn.innerText = 'ENCRYPTING_TRANSMISSION...';
+              btn.disabled = true;
+              const fd = new FormData(form);
+              const data = Object.fromEntries(fd);
+              data.source = submitSource;
+              try {
+                const r = await fetch(`${window.location.origin}/api/submit-lead`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (r.ok) { btn.innerText = 'TRANSMISSION_SUCCESSFUL'; btn.style.borderColor = 'var(--neon-green)'; setTimeout(() => { form.reset(); btn.innerText = orig; btn.disabled = false; }, 3000); }
+                else throw new Error();
+              } catch {
+                btn.innerText = 'ERR_CONNECTION_REFUSED';
+                btn.style.borderColor = 'var(--neon-pink)';
+                setTimeout(() => { btn.innerText = orig; btn.disabled = false; }, 3000);
+              }
+            });
+          </script>
         </section>
       );
     }
@@ -132,7 +304,7 @@ const { blocks } = Astro.props;
     case 'survey': {
       const sectionTitle = (d.section_title as string) || "Let's Build It Right.";
       return (
-        <section id="contact" class="py-24 bg-black">
+        <section id="contact" class="py-24 bg-black" aria-label="Contact form">
           <div class="container mx-auto px-6">
             <div class="max-w-3xl mx-auto">
               <h2 class="text-3xl font-bold text-center mb-12 text-white">{sectionTitle}</h2>

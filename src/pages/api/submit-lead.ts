@@ -1,17 +1,5 @@
 import type { APIRoute } from 'astro';
-import pg from 'pg';
-
-const { Pool } = pg;
-let pool: pg.Pool | null = null;
-
-function getPool(): pg.Pool | null {
-  const url = typeof process !== 'undefined' ? process.env.DATABASE_URL : undefined;
-  if (!url) return null;
-  if (!pool) {
-    pool = new Pool({ connectionString: url, max: 5 });
-  }
-  return pool;
-}
+import { getPool } from '../../lib/db';
 
 export const POST: APIRoute = async ({ request }) => {
   const p = getPool();

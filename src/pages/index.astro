@@ -1,15 +1,13 @@
 ---
-// DB-driven homepage - direct Postgres
+// DB-driven homepage - caw_content
 import BaseLayout from '../layouts/BaseLayout.astro';
 import BlockRenderer from '../components/BlockRenderer.astro';
 import { getPageData } from '../lib/dbLoader';
 
-const domain = Astro.locals.domain || Astro.request.headers.get('host') || 'chrisamaya.work';
-const siteUrl = domain.includes('://') ? domain : `https://${domain}`;
-
-const pageData = await getPageData(siteUrl, '');
+const pageData = await getPageData('');
 
 if (!pageData) {
+  // DB unreachable or empty — check /api/health for diagnostics
   return Astro.redirect('/404');
 }
 
