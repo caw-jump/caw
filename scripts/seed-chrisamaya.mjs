@@ -127,7 +127,7 @@ async function runSeed() {
       await client.query(
         `INSERT INTO caw_content (slug, title, blocks, palette, nav, footer)
          VALUES ($1, $2, $3::jsonb, $4, $5::jsonb, $6::jsonb)
-         ON CONFLICT (slug) DO UPDATE SET title = EXCLUDED.title, blocks = EXCLUDED.blocks, palette = EXCLUDED.palette, nav = EXCLUDED.nav, footer = EXCLUDED.footer`,
+         ON CONFLICT (slug) DO NOTHING`,
         [slug, title, JSON.stringify(blocks), theme.palette, JSON.stringify(theme.nav), JSON.stringify(theme.footer)]
       );
     }

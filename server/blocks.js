@@ -104,24 +104,28 @@ function renderBlock(block) {
         <form id="${formId}" class="space-y-4">
           <div>
             <label for="${formId}-name" class="text-[#00FF94] font-mono text-xs uppercase block mb-1">Root User ID (Name)</label>
-            <input type="text" id="${formId}-name" name="name" required placeholder="John Doe" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2"/>
+            <input type="text" id="${formId}-name" name="name" required placeholder="John Doe"
+              style="width:100%;background:#111;border:1px solid rgba(255,255,255,.25);color:#fff;padding:.65rem .9rem;font-size:.875rem;border-radius:.25rem"/>
           </div>
           <div>
             <label for="${formId}-email" class="text-[#00FF94] font-mono text-xs uppercase block mb-1">Communication Link (Email)</label>
-            <input type="email" id="${formId}-email" name="email" required placeholder="john@agency.com" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2"/>
+            <input type="email" id="${formId}-email" name="email" required placeholder="john@agency.com"
+              style="width:100%;background:#111;border:1px solid rgba(255,255,255,.25);color:#fff;padding:.65rem .9rem;font-size:.875rem;border-radius:.25rem"/>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label for="${formId}-revenue" class="text-[#00FF94] font-mono text-xs uppercase block mb-1">Load (Revenue)</label>
-              <select id="${formId}-revenue" name="revenue" aria-label="Select revenue range" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2">
-                <option value="500k-1m">$500k - $1M</option>
-                <option value="1m-3m">$1M - $3M</option>
+              <select id="${formId}-revenue" name="revenue" aria-label="Select revenue range"
+                style="width:100%;background:#111;border:1px solid rgba(255,255,255,.25);color:#fff;padding:.6rem .9rem;font-size:.875rem;border-radius:.25rem;-webkit-appearance:none;appearance:none;">
+                <option value="500k-1m">$500k – $1M</option>
+                <option value="1m-3m">$1M – $3M</option>
                 <option value="3m+">$3M+</option>
               </select>
             </div>
             <div>
               <label for="${formId}-budget" class="text-[#00FF94] font-mono text-xs uppercase block mb-1">Budget</label>
-              <select id="${formId}-budget" name="budget" aria-label="Select budget range" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2">
+              <select id="${formId}-budget" name="budget" aria-label="Select budget range"
+                style="width:100%;background:#111;border:1px solid rgba(255,255,255,.25);color:#fff;padding:.6rem .9rem;font-size:.875rem;border-radius:.25rem;-webkit-appearance:none;appearance:none;">
                 <option value="10k+">$10k+</option>
                 <option value="25k+">$25k+</option>
                 <option value="50k+">$50k+</option>
@@ -130,7 +134,8 @@ function renderBlock(block) {
           </div>
           <div>
             <label for="${formId}-problem" class="text-[#00FF94] font-mono text-xs uppercase block mb-1">System Error (The Problem)</label>
-            <textarea id="${formId}-problem" name="problem" rows="3" placeholder="What is currently breaking?" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2"></textarea>
+            <textarea id="${formId}-problem" name="problem" rows="3" placeholder="What is currently breaking?"
+              style="width:100%;background:#111;border:1px solid rgba(255,255,255,.25);color:#fff;padding:.65rem .9rem;font-size:.875rem;border-radius:.25rem;resize:vertical;min-height:80px"></textarea>
           </div>
           <input type="hidden" name="source" value="${esc(submitSource)}"/>
           <input type="hidden" name="form_type" value="architect"/>
