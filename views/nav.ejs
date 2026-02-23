@@ -6,97 +6,140 @@
   const first = sitePart[0] || '';
   const rest = sitePart.slice(1).join(' ') || '';
 %>
-<nav id="navbar" aria-label="Main navigation">
-  <div class="container flex items-center" style="justify-content:space-between">
+<style>
+  /* Nav responsive overrides — scoped here to avoid layout.ejs media query order issues */
+  #desktop-nav { display: none }
+  @media (min-width: 1024px) {
+    #desktop-nav { display: flex; align-items: center; gap: 1.75rem; list-style: none }
+    #mobile-menu-btn { display: none !important }
+  }
+  /* Dropdown hover */
+  .nav-dropdown { position: relative }
+  .nav-dropdown > button {
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,.9); font-size: .875rem; font-weight: 500;
+    display: flex; align-items: center; gap: .3rem;
+    min-height: 44px; padding: 0;
+  }
+  .nav-dropdown > button::after { content: ' ▾'; font-size: .65rem; opacity: .7 } .nav-dropdown-menu { display: none;
+  position: absolute; top: calc(100% + .5rem); left: 50%; transform: translateX(-50%); min-width: 210px; background:
+  #1a1a1a; border: 1px solid rgba(255,255,255,.12); border-radius: .5rem; padding: .4rem 0; z-index: 300; box-shadow: 0
+  16px 48px rgba(0,0,0,.6); } .nav-dropdown:hover .nav-dropdown-menu, .nav-dropdown:focus-within .nav-dropdown-menu {
+  display: block } .nav-dropdown-menu a { display: block; padding: .5rem 1rem; font-size: .82rem; color:
+  rgba(255,255,255,.8); min-height: 36px; } .nav-dropdown-menu a:hover { color: #fff; background: rgba(255,255,255,.06)
+  } </style>
 
-    <!-- Logo -->
-    <a href="/" aria-label="Chris Amaya — Home" style="display:flex;align-items:center;gap:.75rem">
-      <div style="width:40px;height:40px;background:linear-gradient(135deg,#00FF94,#00BC6D);border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="3" aria-hidden="true" focusable="false"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      </div>
-      <span class="font-bold text-xl" style="display:none" aria-hidden="true"><%= first %><span style="color:#00FF94"><%= rest %></span></span>
-      <span style="font-weight:700;font-size:1.15rem;color:#fff"><%= first %><span style="color:#00FF94"><%= rest %></span></span>
-    </a>
+  <nav id="navbar" aria-label="Main navigation">
+    <div class="container flex items-center" style="justify-content:space-between">
 
-    <!-- Desktop nav -->
-    <ul style="display:none" class="lg:flex" id="desktop-nav" role="list" aria-label="Site navigation"
-        style="display:flex;align-items:center;gap:1.75rem;list-style:none;font-size:.875rem;font-weight:500">
+      <!-- Logo -->
+      <a href="/" aria-label="Chris Amaya — Home"
+        style="display:flex;align-items:center;gap:.75rem;text-decoration:none">
+        <div
+          style="width:40px;height:40px;background:linear-gradient(135deg,#00FF94,#00BC6D);border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0"
+          aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="3"
+            aria-hidden="true" focusable="false">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+        </div>
+        <span style="font-weight:700;font-size:1.1rem;color:#fff">
+          <%= first %><span style="color:#00FF94">
+              <%= rest %>
+            </span>
+        </span>
+      </a>
 
-      <!-- Portfolio links (first 2 as anchors, rest from DB) -->
-      <li><a href="/#hook" style="color:rgba(255,255,255,.9);min-height:44px;display:flex;align-items:center;">The Problem</a></li>
-      <li><a href="/#solution" style="color:rgba(255,255,255,.9);min-height:44px;display:flex;align-items:center;">Architecture</a></li>
-      <% portfolio.slice(2).forEach(function(item){ %>
-      <li><a href="<%= item.href %>" style="color:rgba(255,255,255,.9);min-height:44px;display:flex;align-items:center;"><%= item.name %></a></li>
-      <% }); %>
+      <!-- Desktop nav (hidden by default, shown ≥1024px via <style> above) -->
+      <ul id="desktop-nav" role="list" aria-label="Site navigation">
 
-      <!-- Services dropdown -->
-      <% if (customApps.length) { %>
-      <li class="nav-dropdown">
-        <button type="button" aria-haspopup="true" aria-expanded="false">Services</button>
-        <ul class="nav-dropdown-menu" role="menu" aria-label="Custom App Services">
-          <% customApps.forEach(function(item){ %>
-          <li role="none"><a href="<%= item.href %>" role="menuitem"><%= item.name %></a></li>
+        <li><a href="/#hook" style="color:rgba(255,255,255,.9);min-height:44px;display:flex;align-items:center;">The
+            Problem</a></li>
+        <li><a href="/#solution"
+            style="color:rgba(255,255,255,.9);min-height:44px;display:flex;align-items:center;">Architecture</a></li>
+
+        <% portfolio.slice(2).forEach(function(item){ %>
+          <li><a href="<%= item.href %>"
+              style="color:rgba(255,255,255,.9);min-height:44px;display:flex;align-items:center;">
+              <%= item.name %>
+            </a></li>
           <% }); %>
-        </ul>
-      </li>
-      <% } %>
 
-      <!-- CTA -->
-      <li>
-        <a href="<%= ctaHref %>" class="btn-primary" style="padding:.6rem 1.4rem;font-size:.8rem;min-height:44px"><%= ctaLabel %></a>
-      </li>
-    </ul>
+            <% if (customApps.length) { %>
+              <li class="nav-dropdown">
+                <button type="button" aria-haspopup="true" aria-expanded="false">Services</button>
+                <ul class="nav-dropdown-menu" role="menu" aria-label="Services">
+                  <% customApps.forEach(function(item){ %>
+                    <li role="none"><a href="<%= item.href %>" role="menuitem">
+                        <%= item.name %>
+                      </a></li>
+                    <% }); %>
+                </ul>
+              </li>
+              <% } %>
 
-    <!-- Hamburger -->
-    <button id="mobile-menu-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-drawer"
-            style="display:flex" class="lg:hidden">
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-    </button>
+                <li>
+                  <a href="<%= ctaHref %>"
+                    style="display:inline-flex;align-items:center;padding:.6rem 1.4rem;background:#00FF94;color:#050505;font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;border-radius:.5rem;min-height:44px;white-space:nowrap">
+                    <%= ctaLabel %>
+                  </a>
+                </li>
+      </ul>
 
-  </div>
-</nav>
+      <!-- Hamburger (shown <1024px) -->
+      <button id="mobile-menu-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-drawer"
+        style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:44px;height:44px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:.375rem;cursor:pointer;padding:0">
+        <span style="width:20px;height:2px;background:#fff;display:block" aria-hidden="true"></span>
+        <span style="width:20px;height:2px;background:#fff;display:block" aria-hidden="true"></span>
+        <span style="width:20px;height:2px;background:#fff;display:block" aria-hidden="true"></span>
+      </button>
 
-<!-- Mobile drawer — `inert` prevents focus trapping issue -->
-<div id="mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu" inert>
-  <button id="mobile-drawer-close" aria-label="Close navigation menu">✕</button>
-
-  <nav aria-label="Mobile navigation">
-
-    <!-- Main links -->
-    <div class="drawer-section">
-      <span class="drawer-label">Navigate</span>
-      <a href="/">Home</a>
-      <a href="/#hook">The Problem</a>
-      <a href="/#solution">Architecture</a>
-      <% portfolio.slice(2).forEach(function(item){ %>
-      <a href="<%= item.href %>"><%= item.name %></a>
-      <% }); %>
     </div>
-
-    <!-- Custom apps -->
-    <% if (customApps.length) { %>
-    <div class="drawer-section">
-      <span class="drawer-label">Services</span>
-      <% customApps.forEach(function(item){ %>
-      <a href="<%= item.href %>"><%= item.name %></a>
-      <% }); %>
-    </div>
-    <% } %>
-
-    <!-- Growth tools -->
-    <% if (growthTools.length) { %>
-    <div class="drawer-section">
-      <span class="drawer-label">Growth Tools</span>
-      <% growthTools.forEach(function(item){ %>
-      <a href="<%= item.href %>"><%= item.name %></a>
-      <% }); %>
-    </div>
-    <% } %>
-
-    <!-- CTA -->
-    <a href="<%= ctaHref %>" class="drawer-cta"><%= ctaLabel %></a>
-
   </nav>
-</div>
+
+  <!-- Mobile drawer -->
+  <div id="mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu" inert>
+    <button id="mobile-drawer-close" aria-label="Close navigation menu">✕</button>
+
+    <nav aria-label="Mobile navigation">
+
+      <div class="drawer-section">
+        <span class="drawer-label">Navigate</span>
+        <a href="/">Home</a>
+        <a href="/#hook">The Problem</a>
+        <a href="/#solution">Architecture</a>
+        <% portfolio.slice(2).forEach(function(item){ %>
+          <a href="<%= item.href %>">
+            <%= item.name %>
+          </a>
+          <% }); %>
+      </div>
+
+      <% if (customApps.length) { %>
+        <div class="drawer-section">
+          <span class="drawer-label">Services</span>
+          <% customApps.forEach(function(item){ %>
+            <a href="<%= item.href %>">
+              <%= item.name %>
+            </a>
+            <% }); %>
+        </div>
+        <% } %>
+
+          <% if (growthTools.length) { %>
+            <div class="drawer-section">
+              <span class="drawer-label">Growth Tools</span>
+              <% growthTools.forEach(function(item){ %>
+                <a href="<%= item.href %>">
+                  <%= item.name %>
+                </a>
+                <% }); %>
+            </div>
+            <% } %>
+
+              <a href="<%= ctaHref %>" class="drawer-cta">
+                <%= ctaLabel %>
+              </a>
+
+    </nav>
+  </div>
