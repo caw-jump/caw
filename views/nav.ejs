@@ -1,52 +1,102 @@
-<%
-  const portfolio = nav?.portfolio || [
-    { name: 'The Problem', href: '/#hook' },
-    { name: 'Architecture', href: '/#solution' },
-    { name: 'Blog', href: '/blog' },
-    { name: 'How I Build', href: '/guide/how-i-build' },
-    { name: 'Knowledge Base', href: '/knowledge-base' },
-    { name: 'Search', href: '/search' }
-  ];
-  const customApps = nav?.custom_apps || [];
-  const ctaLabel = nav?.cta?.label || 'INITIATE_HANDSHAKE';
-  const ctaHref = nav?.cta?.href || '#audit';
-  const JUMPSTART = 'https://jumpstartscaling.com';
-  const sitePart = (siteName || 'Chris Amaya').split(' ');
+<% const portfolio=nav?.portfolio || [ { name: 'The Problem' , href: '/#hook' }, { name: 'Architecture' ,
+  href: '/#solution' }, { name: 'Blog & Knowledge Base' , href: '/blog' }, { name: 'How I Build' ,
+  href: '/guide/how-i-build' }, { name: 'Search' , href: '/search' }, ]; const customApps=nav?.custom_apps || []; const
+  growthTools=nav?.growth_tools || []; const ctaLabel=nav?.cta?.label || 'INITIATE_HANDSHAKE' ; const
+  ctaHref=nav?.cta?.href || '#audit' ; const sitePart=(siteName || 'Chris Amaya' ).split(' ');
   const first = sitePart[0] || '';
   const rest = sitePart.slice(1).join(' ') || '';
 %>
-<nav id="navbar" class="fixed top-0 left-0 right-0 z-50 py-4" style="background:linear-gradient(to bottom,#1a1a1a,#000);border-bottom:1px solid rgba(255,255,255,0.05)">
-  <div class="container flex items-center justify-between">
-    <a href="/" class="flex items-center gap-3">
-      <div style="width:40px;height:40px;background:linear-gradient(135deg,#00FF94,#00BC6D);border-radius:0.5rem;display:flex;align-items:center;justify-content:center">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+<nav id="navbar" aria-label="Main navigation">
+  <div class="container flex items-center" style="justify-content:space-between">
+
+    <!-- Logo -->
+    <a href="/" aria-label="Chris Amaya — Home" style="display:flex;align-items:center;gap:.75rem">
+      <div style="width:40px;height:40px;background:linear-gradient(135deg,#00FF94,#00BC6D);border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="3" aria-hidden="true" focusable="false"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
       </div>
-      <span class="font-bold text-xl hidden sm:inline"><%= first %><span style="color:#00FF94"><%= rest %></span></span>
+      <span class="font-bold text-xl" style="display:none" aria-hidden="true"><%= first %><span style="color:#00FF94"><%= rest %></span></span>
+      <span style="font-weight:700;font-size:1.15rem;color:#fff"><%= first %><span style="color:#00FF94"><%= rest %></span></span>
     </a>
-    <ul class="hidden lg:flex items-center gap-8 font-medium text-sm" style="color:rgba(255,255,255,0.9)">
-      <li><a href="/#hook" class="hover:opacity-80" style="color:inherit">The Problem</a></li>
-      <li><a href="/#solution" class="hover:opacity-80" style="color:inherit">Architecture</a></li>
+
+    <!-- Desktop nav -->
+    <ul style="display:none" class="lg:flex" id="desktop-nav" role="list" aria-label="Site navigation"
+        style="display:flex;align-items:center;gap:1.75rem;list-style:none;font-size:.875rem;font-weight:500">
+
+      <!-- Portfolio links (first 2 as anchors, rest from DB) -->
+      <li><a href="/#hook" style="color:rgba(255,255,255,.9);min-height:44px;display:flex;align-items:center;">The Problem</a></li>
+      <li><a href="/#solution" style="color:rgba(255,255,255,.9);min-height:44px;display:flex;align-items:center;">Architecture</a></li>
       <% portfolio.slice(2).forEach(function(item){ %>
-      <li><a href="<%= item.href %>" class="hover:opacity-80" style="color:inherit"><%= item.name %></a></li>
+      <li><a href="<%= item.href %>" style="color:rgba(255,255,255,.9);min-height:44px;display:flex;align-items:center;"><%= item.name %></a></li>
       <% }); %>
-      <% if (customApps.length) { customApps.slice(0,4).forEach(function(item){ %>
-      <li><a href="<%= item.href %>" class="hover:opacity-80" style="color:inherit"><%= item.name %></a></li>
-      <% }); } %>
-      <li><a href="<%= ctaHref %>" class="px-6 py-2.5 font-bold text-sm uppercase rounded-lg" style="background:#00FF94;color:#050505"><%= ctaLabel %></a></li>
+
+      <!-- Services dropdown -->
+      <% if (customApps.length) { %>
+      <li class="nav-dropdown">
+        <button type="button" aria-haspopup="true" aria-expanded="false">Services</button>
+        <ul class="nav-dropdown-menu" role="menu" aria-label="Custom App Services">
+          <% customApps.forEach(function(item){ %>
+          <li role="none"><a href="<%= item.href %>" role="menuitem"><%= item.name %></a></li>
+          <% }); %>
+        </ul>
+      </li>
+      <% } %>
+
+      <!-- CTA -->
+      <li>
+        <a href="<%= ctaHref %>" class="btn-primary" style="padding:.6rem 1.4rem;font-size:.8rem;min-height:44px"><%= ctaLabel %></a>
+      </li>
     </ul>
-    <button id="mobile-menu-btn" aria-label="Menu" class="lg:hidden w-12 h-12 flex flex-col justify-center items-center gap-1.5">
-      <span style="width:24px;height:2px;background:#fff;display:block"></span>
-      <span style="width:24px;height:2px;background:#fff;display:block"></span>
-      <span style="width:24px;height:2px;background:#fff;display:block"></span>
+
+    <!-- Hamburger -->
+    <button id="mobile-menu-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-drawer"
+            style="display:flex" class="lg:hidden">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
     </button>
+
   </div>
 </nav>
-<div id="mobile-drawer" class="fixed inset-0 bg-[#0B0B0F] translate-x-full transition-transform duration-300 z-50 overflow-y-auto lg:hidden" aria-hidden="true" style="padding-top:6rem;padding-left:2rem">
-  <ul class="space-y-6">
-    <li><a href="/" class="text-2xl font-bold mobile-link" style="color:#fff">Home</a></li>
-    <% portfolio.forEach(function(item){ %>
-    <li><a href="<%= item.href %>" class="mobile-link block py-2" style="color:rgba(255,255,255,0.8)"><%= item.name %></a></li>
-    <% }); %>
-    <li><a href="<%= ctaHref %>" class="mobile-link block w-full text-center py-4 font-bold rounded-xl mt-8" style="background:#00FF94;color:#050505"><%= ctaLabel %></a></li>
-  </ul>
+
+<!-- Mobile drawer — `inert` prevents focus trapping issue -->
+<div id="mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu" inert>
+  <button id="mobile-drawer-close" aria-label="Close navigation menu">✕</button>
+
+  <nav aria-label="Mobile navigation">
+
+    <!-- Main links -->
+    <div class="drawer-section">
+      <span class="drawer-label">Navigate</span>
+      <a href="/">Home</a>
+      <a href="/#hook">The Problem</a>
+      <a href="/#solution">Architecture</a>
+      <% portfolio.slice(2).forEach(function(item){ %>
+      <a href="<%= item.href %>"><%= item.name %></a>
+      <% }); %>
+    </div>
+
+    <!-- Custom apps -->
+    <% if (customApps.length) { %>
+    <div class="drawer-section">
+      <span class="drawer-label">Services</span>
+      <% customApps.forEach(function(item){ %>
+      <a href="<%= item.href %>"><%= item.name %></a>
+      <% }); %>
+    </div>
+    <% } %>
+
+    <!-- Growth tools -->
+    <% if (growthTools.length) { %>
+    <div class="drawer-section">
+      <span class="drawer-label">Growth Tools</span>
+      <% growthTools.forEach(function(item){ %>
+      <a href="<%= item.href %>"><%= item.name %></a>
+      <% }); %>
+    </div>
+    <% } %>
+
+    <!-- CTA -->
+    <a href="<%= ctaHref %>" class="drawer-cta"><%= ctaLabel %></a>
+
+  </nav>
 </div>

@@ -91,28 +91,56 @@ function renderBlock(block) {
       const subhead = d.subhead || "Let's audit your stack and find the bottleneck.";
       const formTitle = d.form_title || 'INITIATE_HANDSHAKE_PROTOCOL';
       const submitSource = d.submit_source || 'ChrisAmayaWork';
+      const formId = `architectForm-${esc(submitSource).replace(/[^a-zA-Z0-9]/g, '')}`; // Unique ID for the form
       return `
 <section id="audit" class="py-24 relative">
   <div class="container mx-auto px-6">
     <div class="max-w-xl mx-auto">
       <div class="bg-black border border-white/10 p-8">
-        <div class="text-center mb-6"><h3 class="text-white uppercase text-lg font-bold">${esc(title)}</h3><p class="text-white/60 text-sm font-mono mt-1">${esc(subhead)}</p></div>
-        <form id="architectForm" class="space-y-4">
-          <div><label class="text-[#00FF94] font-mono text-xs uppercase block mb-1">Root User ID (Name)</label><input type="text" name="name" required placeholder="John Doe" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2"/></div>
-          <div><label class="text-[#00FF94] font-mono text-xs uppercase block mb-1">Communication Link (Email)</label><input type="email" name="email" required placeholder="john@agency.com" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2"/></div>
-          <div class="grid grid-cols-2 gap-4">
-            <div><label class="text-[#00FF94] font-mono text-xs uppercase block mb-1">Load (Revenue)</label><select name="revenue" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2"><option value="500k-1m">$500k - $1M</option><option value="1m-3m">$1M - $3M</option><option value="3m+">$3M+</option></select></div>
-            <div><label class="text-[#00FF94] font-mono text-xs uppercase block mb-1">Budget</label><select name="budget" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2"><option value="10k+">$10k+</option><option value="25k+">$25k+</option><option value="50k+">$50k+</option></select></div>
+        <div class="text-center mb-6">
+          <h2 class="text-white uppercase text-lg font-bold">${esc(title)}</h2>
+          ${subhead ? `<p class="text-white/60 text-sm font-mono mt-1">${esc(subhead)}</p>` : ''}
+        </div>
+        <form id="${formId}" class="space-y-4">
+          <div>
+            <label for="${formId}-name" class="text-[#00FF94] font-mono text-xs uppercase block mb-1">Root User ID (Name)</label>
+            <input type="text" id="${formId}-name" name="name" required placeholder="John Doe" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2"/>
           </div>
-          <div><label class="text-[#00FF94] font-mono text-xs uppercase block mb-1">System Error (The Problem)</label><textarea name="problem" rows="3" placeholder="What is currently breaking?" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2"></textarea></div>
-          <input type="hidden" name="source" value="${esc(submitSource)}"/><input type="hidden" name="form_type" value="architect"/>
-          <button type="submit" class="w-full py-4 bg-[#00FF94] text-black font-bold uppercase">${esc(formTitle)}</button>
+          <div>
+            <label for="${formId}-email" class="text-[#00FF94] font-mono text-xs uppercase block mb-1">Communication Link (Email)</label>
+            <input type="email" id="${formId}-email" name="email" required placeholder="john@agency.com" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2"/>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="${formId}-revenue" class="text-[#00FF94] font-mono text-xs uppercase block mb-1">Load (Revenue)</label>
+              <select id="${formId}-revenue" name="revenue" aria-label="Select revenue range" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2">
+                <option value="500k-1m">$500k - $1M</option>
+                <option value="1m-3m">$1M - $3M</option>
+                <option value="3m+">$3M+</option>
+              </select>
+            </div>
+            <div>
+              <label for="${formId}-budget" class="text-[#00FF94] font-mono text-xs uppercase block mb-1">Budget</label>
+              <select id="${formId}-budget" name="budget" aria-label="Select budget range" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2">
+                <option value="10k+">$10k+</option>
+                <option value="25k+">$25k+</option>
+                <option value="50k+">$50k+</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label for="${formId}-problem" class="text-[#00FF94] font-mono text-xs uppercase block mb-1">System Error (The Problem)</label>
+            <textarea id="${formId}-problem" name="problem" rows="3" placeholder="What is currently breaking?" class="w-full bg-[#1a1a1a] border border-white/20 text-white rounded-none font-mono px-4 py-2"></textarea>
+          </div>
+          <input type="hidden" name="source" value="${esc(submitSource)}"/>
+          <input type="hidden" name="form_type" value="architect"/>
+          <button type="submit" style="width:100%;min-height:52px;padding:1rem;background:#00FF94;color:#050505;font-weight:700;font-size:.95rem;text-transform:uppercase;letter-spacing:.06em;border:none;border-radius:.375rem;cursor:pointer;transition:background .2s">${esc(formTitle)}</button>
         </form>
       </div>
     </div>
   </div>
   <script>
-    document.getElementById('architectForm')?.addEventListener('submit',async(e)=>{
+    document.getElementById('${formId}')?.addEventListener('submit',async(e)=>{
       e.preventDefault();
       const f=e.target,b=f.querySelector('button'),o=b.innerText;
       b.innerText='ENCRYPTING...';b.disabled=true;
@@ -131,7 +159,11 @@ function renderBlock(block) {
       const label = d.label || 'Start Your Moat Audit';
       return `
 <section class="py-24" style="background:#050505;color:#fff;text-align:center">
-  <div class="container mx-auto px-6"><h2 class="text-2xl font-bold mb-4">${esc(heading)}</h2><p class="text-white/70 mb-6">${esc(text)}</p><a href="${esc(href)}" class="inline-block px-8 py-4 bg-[#00FF94] text-[#050505] font-bold rounded-lg">${esc(label)}</a></div>
+  <div class="container" style="max-width:1400px;margin:0 auto;padding:0 1.5rem">
+    <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:1rem">${esc(heading)}</h2>
+    <p style="color:rgba(255,255,255,.7);margin-bottom:1.5rem">${esc(text)}</p>
+    <a href="${esc(href)}" class="btn-primary">${esc(label)}</a>
+  </div>
 </section>`;
     }
     case 'value_prop': {
