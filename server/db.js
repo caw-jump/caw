@@ -198,6 +198,67 @@ export async function getRecentArticles(limit = 5) {
   }
 }
 
+export async function findBestRedirect(slug) {
+  const p = getPool();
+  if (!p) return null;
+
+  const stopWords = new Set(['the', 'and', 'for', 'with', 'how', 'why', 'what', 'our', 'your', 'page', 'site', 'web', 'app', 'new', 'get', 'can', 'you', 'are', 'was', 'has', 'have', 'this', 'that', 'from', 'all', 'not', 'but']);
+  const keywords = slug.replace(/[^a-z0-9]/gi, ' ').split(/\s+/).filter((w) => w.length > 3 && !stopWords.has(w.toLowerCase()));
+  if (keywords.length === 0) return null;
+
+  try {
+    // 1. Exact prefix match — strip trailing segments
+    const parts = slug.split('/');
+    for (let i = parts.length; i >= 1; i--) {
+      const partial = parts.slice(0, i).join('/');
+      const r = await p.query('SELECT slug FROM caw_content WHERE slug = $1 LIMIT 1', [partial]);
+      if (r.rows[0]) return { slug: r.rows[0].slug, type: 'page' };
+    }
+
+    // 2. Check articles exact slug
+    const artExact = await p.query(
+      "SELECT slug FROM caw_articles WHERE status = 'published' AND slug = $1 LIMIT 1",
+      [slug]
+    );
+    if (artExact.rows[0]) return { slug: `blog/${artExact.rows[0].slug}`, type: 'article' };
+
+    // 3. Keyword match on pages — require >=2 keyword hits or 1 strong hit (>5 chars)
+    const likeConditions = keywords.map((_, i) => `slug ILIKE $${i + 1}`);
+    const likeParams = keywords.map((k) => `%${k}%`);
+    const minScore = keywords.length >= 2 ? 2 : (keywords[0] && keywords[0].length > 5 ? 1 : 2);
+    if (likeConditions.length > 0) {
+      const pageMatch = await p.query(
+        `SELECT slug, (${likeConditions.map((c) => `CASE WHEN ${c} THEN 1 ELSE 0 END`).join(' + ')}) AS score
+         FROM caw_content WHERE ${likeConditions.join(' OR ')}
+         ORDER BY score DESC, length(slug) ASC LIMIT 1`,
+        likeParams
+      );
+      if (pageMatch.rows[0] && pageMatch.rows[0].score >= minScore) {
+        return { slug: pageMatch.rows[0].slug, type: 'page' };
+      }
+    }
+
+    // 4. Keyword match on articles — same threshold
+    const artLikeConditions = keywords.map((_, i) => `(slug ILIKE $${i + 1} OR title ILIKE $${i + 1})`);
+    if (artLikeConditions.length > 0) {
+      const artMatch = await p.query(
+        `SELECT slug, (${artLikeConditions.map((c) => `CASE WHEN ${c} THEN 1 ELSE 0 END`).join(' + ')}) AS score
+         FROM caw_articles WHERE status = 'published' AND (${artLikeConditions.join(' OR ')})
+         ORDER BY score DESC LIMIT 1`,
+        likeParams
+      );
+      if (artMatch.rows[0] && artMatch.rows[0].score >= minScore) {
+        return { slug: `blog/${artMatch.rows[0].slug}`, type: 'article' };
+      }
+    }
+
+    return null;
+  } catch (err) {
+    console.error('[db] findBestRedirect:', err.message);
+    return null;
+  }
+}
+
 export async function getArticlesForService(serviceSlug) {
   const p = getPool();
   if (!p) return [];

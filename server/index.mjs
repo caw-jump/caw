@@ -9,7 +9,7 @@ import fastifyStatic from '@fastify/static';
 import ejs from 'ejs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { getPageData, getPool, getArticles, getArticle, searchContent, getRelatedArticles, getArticleNav, getCategoryCounts, getRecentArticles, getArticlesForService } from './db.js';
+import { getPageData, getPool, getArticles, getArticle, searchContent, getRelatedArticles, getArticleNav, getCategoryCounts, getRecentArticles, getArticlesForService, findBestRedirect } from './db.js';
 import { renderBlocks } from './blocks.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -233,16 +233,103 @@ fastify.get('/', async (req, reply) => {
   });
 });
 
+// Known legacy redirect map (old URL → new path)
+const REDIRECT_MAP = {
+  'services-how-we-help': '/services',
+  'how-we-help': '/services',
+  'what-we-do': '/services',
+  'our-services': '/services',
+  'portfolio': '/about',
+  'work': '/about',
+  'case-studies': '/blog',
+  'articles': '/blog',
+  'posts': '/blog',
+  'insights': '/blog',
+  'resources': '/resources/calculators',
+  'tools': '/resources/calculators',
+  'get-started': '/contact',
+  'book': '/contact',
+  'schedule': '/contact',
+  'hire': '/contact',
+  'consultation': '/audit',
+  'free-audit': '/audit',
+  'stack-audit': '/audit',
+  'methodology': '/guide/how-i-build',
+  'process': '/guide/how-i-build',
+  'how-it-works': '/guide/how-i-build',
+  'tos': '/terms',
+  'terms-of-service': '/terms',
+  'privacy-policy': '/privacy',
+  'custom-apps': '/services',
+  'custom-software': '/services',
+};
+
 fastify.setNotFoundHandler(async (req, reply) => {
   const pathname = (req.url || '/').replace(/\?.*$/, '').replace(/\/$/, '') || '/';
+
   if (pathname.startsWith('/api') || pathname.startsWith('/health')) {
     return reply.status(404).send({ error: 'Not found' });
   }
+
   const slug = pathname === '/' ? '' : pathname.replace(/^\/+/, '');
+
   if (slug.includes('.') && !pathname.endsWith('/')) {
     return reply.status(404).send('Not found');
   }
-  return handlePage(req, reply, slug);
+
+  // Try serving from caw_content first
+  const pageData = await getPageData(slug);
+  if (pageData) return handlePage(req, reply, slug);
+
+  // 1. Check hardcoded redirect map
+  const mapTarget = REDIRECT_MAP[slug] || REDIRECT_MAP[slug.split('/').pop()];
+  if (mapTarget) {
+    reply.code(301).redirect(mapTarget);
+    return;
+  }
+
+  // 2. Trailing slash redirect: /services/ → /services
+  if (req.url.endsWith('/') && slug) {
+    const clean = '/' + slug;
+    const check = await getPageData(slug);
+    if (check) {
+      reply.code(301).redirect(clean);
+      return;
+    }
+  }
+
+  // 3. Smart fuzzy redirect via DB
+  const match = await findBestRedirect(slug);
+  if (match) {
+    const target = match.slug === '' ? '/' : '/' + match.slug;
+    reply.code(301).redirect(target);
+    return;
+  }
+
+  // 4. If URL looks like a blog article slug, try searching articles
+  if (!slug.includes('/')) {
+    const artCheck = await getArticle(slug);
+    if (artCheck) {
+      reply.code(301).redirect(`/blog/${slug}`);
+      return;
+    }
+  }
+
+  // 5. True 404 — show helpful page with search and suggestions
+  const [suggestions, anyPage] = await Promise.all([
+    getRecentArticles(3),
+    getPageData(''),
+  ]);
+  const navData = anyPage?.nav || {};
+  const footerData = anyPage?.footer || {};
+  reply.code(404);
+  return reply.viewAsync('404.ejs', {
+    siteName: 'Chris Amaya',
+    currentPath: pathname,
+    suggestions,
+    nav: navData,
+    footer: footerData,
+  });
 });
 
 try {
