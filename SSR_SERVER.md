@@ -12,7 +12,7 @@ npm run dev
 npm run start
 ```
 
-Requires `DATABASE_URL` (same Postgres as god-mode, with `caw_content` seeded).
+Requires `DATABASE_URL` (Postgres with `caw_content` seeded).
 
 ## Stack
 
@@ -46,7 +46,7 @@ public/       — Static (favicon, etc.)
 
 ## Seed
 
-Ensure `caw_content` is populated. God-mode-api seeds it on startup. Or run:
+Ensure `caw_content` is populated:
 
 ```bash
 DATABASE_URL=... npm run db:seed

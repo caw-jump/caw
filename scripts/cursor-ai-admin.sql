@@ -1,6 +1,6 @@
 -- Creates a role 'cursor_ai' with full DDL/DML on the public schema
--- Run as superuser (postgres) or owner of the database on the shared Postgres
--- (same instance god-mode uses). Set a strong password and store in .env or 1Password.
+-- Run as superuser (postgres) or owner of the database.
+-- Set a strong password and store in .env or a secrets manager.
 
 CREATE ROLE cursor_ai WITH LOGIN PASSWORD 'CHANGE_ME';
 
