@@ -1,0 +1,315 @@
+#!/usr/bin/env bash
+# ─────────────────────────────────────────────────────────────
+# caw-cli — Terminal tool for managing chrisamaya.work content
+# Usage: ./caw-cli.sh [command]
+# ─────────────────────────────────────────────────────────────
+
+DB_URL="postgres://postgres:T5onXDGk5dEB5usKJeLsBG4YCSXqbk7HZVAIn6d3sse8Do5LYyFfYQScPStbuQYA@86.48.23.38:5432/postgres?sslmode=require"
+
+# Colors
+G='\033[0;32m'  # Green
+P='\033[0;35m'  # Pink
+B='\033[0;34m'  # Blue
+W='\033[1;37m'  # White bold
+D='\033[0;90m'  # Dim
+R='\033[0m'     # Reset
+
+banner() {
+  echo ""
+  echo -e "${G}  ┌─────────────────────────────────────┐${R}"
+  echo -e "${G}  │${W}  chrisamaya.work — Content Manager  ${G}│${R}"
+  echo -e "${G}  └─────────────────────────────────────┘${R}"
+  echo ""
+}
+
+require_psql() {
+  if ! command -v psql &>/dev/null; then
+    echo -e "${P}psql not found.${R} Install with: brew install libpq && brew link --force libpq"
+    exit 1
+  fi
+}
+
+run_sql() {
+  PGSSLMODE=require psql "$DB_URL" -t -A -c "$1" 2>/dev/null
+}
+
+run_sql_pretty() {
+  PGSSLMODE=require psql "$DB_URL" -c "$1" 2>/dev/null
+}
+
+# ── Commands ──────────────────────────────────────────────────
+
+cmd_list() {
+  echo -e "${W}Published Articles:${R}"
+  echo ""
+  run_sql_pretty "
+    SELECT
+      slug,
+      LEFT(title, 50) AS title,
+      category,
+      to_char(published_at, 'YYYY-MM-DD') AS published
+    FROM caw_articles
+    WHERE status = 'published'
+    ORDER BY published_at DESC;
+  "
+  COUNT=$(run_sql "SELECT COUNT(*) FROM caw_articles WHERE status = 'published'")
+  echo -e "${D}Total: ${COUNT} articles${R}"
+  echo -e "${D}Blog: https://chrisamaya.work/blog${R}"
+}
+
+cmd_pages() {
+  echo -e "${W}All Pages:${R}"
+  echo ""
+  run_sql_pretty "
+    SELECT
+      CASE WHEN slug = '' THEN '/' ELSE '/' || slug END AS path,
+      LEFT(title, 55) AS title,
+      jsonb_array_length(blocks) AS blocks
+    FROM caw_content
+    ORDER BY slug;
+  "
+}
+
+cmd_view() {
+  if [ -z "$1" ]; then
+    echo -e "${P}Usage: $0 view <slug>${R}"
+    echo -e "${D}Example: $0 view why-self-hosted-beats-saas${R}"
+    return 1
+  fi
+  run_sql_pretty "
+    SELECT slug, title, excerpt, category, tags, status,
+           to_char(published_at, 'YYYY-MM-DD HH24:MI') AS published,
+           length(content) AS content_chars
+    FROM caw_articles WHERE slug = '$1';
+  "
+  echo -e "${B}URL: https://chrisamaya.work/blog/$1${R}"
+}
+
+cmd_new() {
+  echo -e "${W}Create New Article${R}"
+  echo ""
+
+  read -p "$(echo -e ${G})slug${R} (lowercase-with-hyphens): " SLUG
+  [ -z "$SLUG" ] && echo "Cancelled." && return
+
+  read -p "$(echo -e ${G})title${R}: " TITLE
+  [ -z "$TITLE" ] && echo "Cancelled." && return
+
+  read -p "$(echo -e ${G})excerpt${R} (one sentence): " EXCERPT
+
+  echo -e "${D}Categories: infrastructure, ai, postgresql, frontend, fastapi, tracking, growth, security${R}"
+  read -p "$(echo -e ${G})category${R} [infrastructure]: " CATEGORY
+  CATEGORY=${CATEGORY:-infrastructure}
+
+  read -p "$(echo -e ${G})tags${R} (comma-separated): " TAGS_RAW
+  # Convert "tag1, tag2" to ["tag1","tag2"]
+  TAGS_JSON=$(echo "$TAGS_RAW" | sed 's/[[:space:]]*,[[:space:]]*/","/g' | sed 's/^/["/' | sed 's/$/"]/')
+
+  echo ""
+  echo -e "${W}Enter HTML content below. Press Ctrl+D when done:${R}"
+  echo -e "${D}(Tip: write in a text editor first, then paste here)${R}"
+  CONTENT=$(cat)
+
+  # Escape single quotes
+  TITLE_ESC="${TITLE//\'/\'\'}"
+  EXCERPT_ESC="${EXCERPT//\'/\'\'}"
+  CONTENT_ESC="${CONTENT//\'/\'\'}"
+
+  run_sql "
+    INSERT INTO caw_articles (slug, title, excerpt, content, category, tags, status, published_at)
+    VALUES (
+      '${SLUG}',
+      '${TITLE_ESC}',
+      '${EXCERPT_ESC}',
+      '${CONTENT_ESC}',
+      '${CATEGORY}',
+      '${TAGS_JSON}'::jsonb,
+      'published',
+      NOW()
+    )
+    ON CONFLICT (slug) DO UPDATE SET
+      title = EXCLUDED.title, excerpt = EXCLUDED.excerpt, content = EXCLUDED.content,
+      category = EXCLUDED.category, tags = EXCLUDED.tags, status = EXCLUDED.status, updated_at = NOW();
+  "
+
+  echo ""
+  echo -e "${G}✓ Published!${R}"
+  echo -e "${B}URL: https://chrisamaya.work/blog/${SLUG}${R}"
+}
+
+cmd_insert_file() {
+  if [ -z "$1" ]; then
+    echo -e "${P}Usage: $0 insert-file <path-to-sql-file>${R}"
+    echo -e "${D}Example: $0 insert-file article.sql${R}"
+    return 1
+  fi
+  if [ ! -f "$1" ]; then
+    echo -e "${P}File not found: $1${R}"
+    return 1
+  fi
+  PGSSLMODE=require psql "$DB_URL" -f "$1" 2>/dev/null
+  echo -e "${G}✓ SQL file executed.${R}"
+}
+
+cmd_insert_sql() {
+  echo -e "${W}Paste your SQL INSERT statement. Press Ctrl+D when done:${R}"
+  SQL=$(cat)
+  echo "$SQL" | PGSSLMODE=require psql "$DB_URL" 2>/dev/null
+  echo -e "${G}✓ Executed.${R}"
+}
+
+cmd_delete() {
+  if [ -z "$1" ]; then
+    echo -e "${P}Usage: $0 delete <slug>${R}"
+    return 1
+  fi
+  read -p "Archive article '${1}'? (y/N): " CONFIRM
+  if [ "$CONFIRM" = "y" ] || [ "$CONFIRM" = "Y" ]; then
+    run_sql "UPDATE caw_articles SET status = 'archived', updated_at = NOW() WHERE slug = '$1'"
+    echo -e "${G}✓ Archived (not deleted). Set status back to 'published' to restore.${R}"
+  else
+    echo "Cancelled."
+  fi
+}
+
+cmd_unpublish() {
+  if [ -z "$1" ]; then
+    echo -e "${P}Usage: $0 unpublish <slug>${R}"
+    return 1
+  fi
+  run_sql "UPDATE caw_articles SET status = 'draft', updated_at = NOW() WHERE slug = '$1'"
+  echo -e "${G}✓ Unpublished. Article is now a draft.${R}"
+}
+
+cmd_publish() {
+  if [ -z "$1" ]; then
+    echo -e "${P}Usage: $0 publish <slug>${R}"
+    return 1
+  fi
+  run_sql "UPDATE caw_articles SET status = 'published', published_at = COALESCE(published_at, NOW()), updated_at = NOW() WHERE slug = '$1'"
+  echo -e "${G}✓ Published!${R}"
+  echo -e "${B}URL: https://chrisamaya.work/blog/$1${R}"
+}
+
+cmd_health() {
+  echo -e "${W}Site Health:${R}"
+  echo ""
+  HEALTH=$(curl -s https://chrisamaya.work/api/health)
+  echo -e "  API:      ${G}${HEALTH}${R}"
+  echo ""
+  PAGES=$(run_sql "SELECT COUNT(*) FROM caw_content")
+  ARTICLES=$(run_sql "SELECT COUNT(*) FROM caw_articles WHERE status = 'published'")
+  DRAFTS=$(run_sql "SELECT COUNT(*) FROM caw_articles WHERE status = 'draft'")
+  LEADS=$(run_sql "SELECT COUNT(*) FROM leads")
+  echo -e "  Pages:    ${W}${PAGES}${R}"
+  echo -e "  Articles: ${W}${ARTICLES}${R} published, ${D}${DRAFTS} drafts${R}"
+  echo -e "  Leads:    ${W}${LEADS}${R}"
+  echo ""
+  echo -e "  Site:     ${B}https://chrisamaya.work${R}"
+  echo -e "  Blog:     ${B}https://chrisamaya.work/blog${R}"
+  echo -e "  Coolify:  ${B}http://86.48.23.38:8000${R}"
+}
+
+cmd_leads() {
+  echo -e "${W}Recent Leads:${R}"
+  echo ""
+  run_sql_pretty "
+    SELECT
+      id, name, email, source, form_type,
+      to_char(created_at, 'YYYY-MM-DD HH24:MI') AS submitted
+    FROM leads
+    ORDER BY created_at DESC
+    LIMIT 20;
+  "
+}
+
+cmd_search() {
+  if [ -z "$1" ]; then
+    echo -e "${P}Usage: $0 search <keyword>${R}"
+    return 1
+  fi
+  run_sql_pretty "
+    SELECT slug, LEFT(title, 50) AS title, category
+    FROM caw_articles
+    WHERE title ILIKE '%${1}%' OR content ILIKE '%${1}%' OR excerpt ILIKE '%${1}%'
+    ORDER BY published_at DESC;
+  "
+}
+
+cmd_categories() {
+  echo -e "${W}Articles by Category:${R}"
+  echo ""
+  run_sql_pretty "
+    SELECT category, COUNT(*) AS articles
+    FROM caw_articles
+    WHERE status = 'published'
+    GROUP BY category
+    ORDER BY articles DESC;
+  "
+}
+
+cmd_export() {
+  OUTFILE="${1:-caw_articles_export.sql}"
+  echo -e "${W}Exporting all articles to ${OUTFILE}...${R}"
+  PGSSLMODE=require pg_dump "$DB_URL" -t caw_articles --data-only --inserts > "$OUTFILE" 2>/dev/null
+  echo -e "${G}✓ Exported to ${OUTFILE}${R}"
+}
+
+cmd_sql() {
+  echo -e "${W}Interactive SQL (type \\q to quit):${R}"
+  PGSSLMODE=require psql "$DB_URL" 2>/dev/null
+}
+
+cmd_help() {
+  banner
+  echo -e "  ${W}ARTICLES${R}"
+  echo -e "  ${G}list${R}                    List all published articles"
+  echo -e "  ${G}view${R} <slug>             View article details"
+  echo -e "  ${G}new${R}                     Create a new article (interactive)"
+  echo -e "  ${G}insert-sql${R}              Paste raw SQL to execute"
+  echo -e "  ${G}insert-file${R} <file.sql>  Run a SQL file"
+  echo -e "  ${G}publish${R} <slug>          Publish a draft article"
+  echo -e "  ${G}unpublish${R} <slug>        Unpublish (set to draft)"
+  echo -e "  ${G}delete${R} <slug>           Archive an article"
+  echo -e "  ${G}search${R} <keyword>        Search articles by keyword"
+  echo -e "  ${G}categories${R}              Show article counts by category"
+  echo ""
+  echo -e "  ${W}SITE${R}"
+  echo -e "  ${G}pages${R}                   List all site pages"
+  echo -e "  ${G}health${R}                  Check site health & stats"
+  echo -e "  ${G}leads${R}                   Show recent form submissions"
+  echo ""
+  echo -e "  ${W}ADVANCED${R}"
+  echo -e "  ${G}sql${R}                     Interactive psql session"
+  echo -e "  ${G}export${R} [file.sql]       Export all articles as SQL"
+  echo ""
+  echo -e "  ${D}Requires: psql (brew install libpq && brew link --force libpq)${R}"
+  echo ""
+}
+
+# ── Main ──────────────────────────────────────────────────────
+
+require_psql
+
+case "${1}" in
+  list)         cmd_list ;;
+  pages)        cmd_pages ;;
+  view)         cmd_view "$2" ;;
+  new)          cmd_new ;;
+  insert-sql)   cmd_insert_sql ;;
+  insert-file)  cmd_insert_file "$2" ;;
+  delete)       cmd_delete "$2" ;;
+  unpublish)    cmd_unpublish "$2" ;;
+  publish)      cmd_publish "$2" ;;
+  health)       cmd_health ;;
+  leads)        cmd_leads ;;
+  search)       cmd_search "$2" ;;
+  categories)   cmd_categories ;;
+  export)       cmd_export "$2" ;;
+  sql)          cmd_sql ;;
+  help|--help|-h|"") cmd_help ;;
+  *)
+    echo -e "${P}Unknown command: $1${R}"
+    cmd_help
+    ;;
+esac
