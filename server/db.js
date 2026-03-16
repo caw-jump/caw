@@ -311,6 +311,33 @@ export async function getLocationPages(locationSlug) {
        WHERE l.slug = $1 ORDER BY ps.service_type`,
       [locationSlug]
     );
+
+    // Fetch tech_value_props descriptions from spintax_dictionaries
+    const descRows = await p.query("SELECT data FROM spintax_dictionaries WHERE category = 'tech_value_props' LIMIT 1");
+    const techDescriptions = descRows.rows[0]?.data || [];
+
+    // Map service types to descriptions based on keyword matching
+    const descMap = {
+      'ai': 0,        // "We engineer private AI systems that run while you sleep."
+      'headless': 1,   // "Our headless architecture delivers perfect Core Web Vitals."
+      'seo': 2,        // "Programmatic SEO turns your domain into a 24/7 lead magnet."
+      'zapier': 3,     // "Zapier replacements built in native code for zero latency."
+      'full-stack': 4, // "Full-stack unicorn builds delivered in under 14 days."
+      'agent': 5,      // "AI agents that replace entire departments."
+      'scale': 6,      // "Revenue engines that scale to 10,000 concurrent users."
+    };
+
+    for (const page of pages.rows) {
+      const st = (page.service_type || '').toLowerCase();
+      let descIdx = null;
+      for (const [keyword, idx] of Object.entries(descMap)) {
+        if (st.includes(keyword)) { descIdx = idx; break; }
+      }
+      page.description = descIdx !== null && techDescriptions[descIdx]
+        ? techDescriptions[descIdx]
+        : techDescriptions[descIdx] || techDescriptions[Math.floor(Math.random() * techDescriptions.length)] || '';
+    }
+
     return { location: loc.rows[0], geo: geo.rows[0]?.data || {}, pages: pages.rows };
   } catch (err) { console.error('[db] getLocationPages:', err.message); return { location: null, pages: [] }; }
 }
@@ -386,6 +413,7 @@ export async function getPseoPage(slug) {
     function resolve(text) {
       if (!text) return '';
       let out = text;
+      // Core location/service variables
       out = out.replace(/\{City\}/gi, row.city);
       out = out.replace(/\{State\}/gi, row.state);
       out = out.replace(/\{County\}/gi, geoData.county || row.state);
@@ -397,17 +425,31 @@ export async function getPseoPage(slug) {
       out = out.replace(/\{service_type\}/gi, row.service_type);
       out = out.replace(/\{sub_niche\}/gi, row.sub_niche);
       out = out.replace(/\{software\}/gi, `${row.service_type} ${row.sub_niche}`);
+      // Missing variable replacements
+      out = out.replace(/\{headless\}/gi, 'Headless Architecture');
+      out = out.replace(/\{zapier\}/gi, 'Zapier Replacement');
+      out = out.replace(/\{convert\}/gi, 'convert');
       out = out.replace(/\{pipeline\}/gi, 'growth pipeline');
+      out = out.replace(/\{saas\}/gi, 'Custom SaaS');
+      out = out.replace(/\{ai\}/gi, 'Private AI');
+      out = out.replace(/\{automation\}/gi, 'automation');
+      out = out.replace(/\{cms\}/gi, 'CMS');
+      out = out.replace(/\{seo\}/gi, 'SEO');
+      out = out.replace(/\{dashboard\}/gi, 'dashboard');
+      out = out.replace(/\{ecommerce\}/gi, 'e-commerce');
+      out = out.replace(/\{results\}/gi, () => pick(spintax.results_quantified || ['Proven results for scaling agencies.']));
+      // Existing branded replacements
       out = out.replace(/\{unicorn\}/gi, 'Unicorn Developer');
       out = out.replace(/\{expert\}/gi, 'full-stack architect');
       out = out.replace(/\{revenue\}/gi, 'revenue-generating');
       out = out.replace(/\{grow\}/gi, 'scale');
       out = out.replace(/\{fast\}/gi, 'in under 14 days');
+      // Spintax dictionary categories
       for (const [cat, variants] of Object.entries(spintax)) {
         const regex = new RegExp(`\\{${cat}\\}`, 'gi');
         out = out.replace(regex, () => pick(variants));
       }
-      // Handle {Option1|Option2|Option3} spintax
+      // Handle {Option1|Option2|Option3} inline spintax
       out = out.replace(/\{([^{}]+\|[^{}]+)\}/g, (_, choices) => pick(choices.split('|')));
       return out;
     }
@@ -529,6 +571,52 @@ export async function getPseoPage(slug) {
         submit_source: `pSEO_${row.city}_${row.service_type}`.replace(/\s/g, '_'),
       },
     });
+
+    // Interlinking: Other Services in this City
+    const otherServicesQ = await p.query(
+      `SELECT cm.slug, cm.title, ps.service_type, ps.sub_niche
+       FROM content_matrix cm
+       JOIN pseo_services ps ON ps.id = cm.service_id
+       JOIN locations l ON l.id = cm.location_id
+       WHERE l.city = $1 AND l.state = $2 AND cm.slug != $3
+       ORDER BY RANDOM() LIMIT 6`,
+      [row.city, row.state, slug]
+    );
+    if (otherServicesQ.rows.length > 0) {
+      const linkGrid = otherServicesQ.rows.map(s =>
+        `<a href="/${s.slug}" style="display:block;padding:.75rem 1rem;border:1px solid rgba(255,255,255,.08);border-radius:.375rem;text-decoration:none;color:#fff;font-size:.9rem;font-weight:600;transition:border-color .2s,background .2s" onmouseover="this.style.borderColor='rgba(0,255,148,.3)';this.style.background='rgba(0,255,148,.03)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='transparent'">${s.service_type} ${s.sub_niche}</a>`
+      ).join('');
+      blocks.push({
+        block_type: 'value_prop',
+        data: {
+          title: `Other Services in ${row.city}`,
+          body: `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.5rem">${linkGrid}</div>`,
+        },
+      });
+    }
+
+    // Interlinking: Same Service in Nearby Cities
+    const nearbyCitiesQ = await p.query(
+      `SELECT cm.slug, cm.title, l.city, l.state
+       FROM content_matrix cm
+       JOIN locations l ON l.id = cm.location_id
+       JOIN pseo_services ps ON ps.id = cm.service_id
+       WHERE ps.service_type = $1 AND ps.sub_niche = $2 AND (l.city != $3 OR l.state != $4)
+       ORDER BY RANDOM() LIMIT 6`,
+      [row.service_type, row.sub_niche, row.city, row.state]
+    );
+    if (nearbyCitiesQ.rows.length > 0) {
+      const cityGrid = nearbyCitiesQ.rows.map(c =>
+        `<a href="/${c.slug}" style="display:block;padding:.75rem 1rem;border:1px solid rgba(255,255,255,.08);border-radius:.375rem;text-decoration:none;color:#fff;font-size:.9rem;font-weight:600;transition:border-color .2s,background .2s" onmouseover="this.style.borderColor='rgba(0,255,148,.3)';this.style.background='rgba(0,255,148,.03)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='transparent'">${c.city}, ${c.state}</a>`
+      ).join('');
+      blocks.push({
+        block_type: 'value_prop',
+        data: {
+          title: `${row.service_type} ${row.sub_niche} in Nearby Cities`,
+          body: `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.5rem">${cityGrid}</div>`,
+        },
+      });
+    }
 
     // CTA
     blocks.push({
