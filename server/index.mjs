@@ -9,7 +9,7 @@ import fastifyStatic from '@fastify/static';
 import ejs from 'ejs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { getPageData, getPool, getArticles, getArticle, searchContent, getRelatedArticles, getArticleNav, getCategoryCounts, getRecentArticles, getArticlesForService, findBestRedirect } from './db.js';
+import { getPageData, getPool, getArticles, getArticle, searchContent, getRelatedArticles, getArticleNav, getCategoryCounts, getRecentArticles, getArticlesForService, findBestRedirect, autoGeneratePage } from './db.js';
 import { renderBlocks } from './blocks.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -315,7 +315,27 @@ fastify.setNotFoundHandler(async (req, reply) => {
     }
   }
 
-  // 5. True 404 — show helpful page with search and suggestions
+  // 5. Auto-generate page from existing blocks — saves permanently
+  if (slug && !slug.includes('.') && slug.length > 3 && slug.length < 120) {
+    const generated = await autoGeneratePage(slug);
+    if (generated) {
+      const { page, blocks, palette, nav: gNav, footer: gFooter } = generated;
+      const siteName = gFooter?.copyright || 'Chris Amaya';
+      const blocksHtml = renderBlocks(blocks);
+      return reply.viewAsync('page.ejs', {
+        title: page.title || 'Chris Amaya',
+        description: 'Custom architecture and sovereign infrastructure for scaling agencies.',
+        siteName,
+        nav: gNav || {},
+        footer: gFooter || {},
+        palette: palette || 'emerald',
+        blocksHtml,
+        currentPath: '/' + slug,
+      });
+    }
+  }
+
+  // 6. True 404 — only for truly unmatchable requests
   const [suggestions, anyPage] = await Promise.all([
     getRecentArticles(3),
     getPageData(''),

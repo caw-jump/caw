@@ -259,6 +259,145 @@ export async function findBestRedirect(slug) {
   }
 }
 
+export async function autoGeneratePage(slug) {
+  const p = getPool();
+  if (!p) return null;
+
+  const keywords = slug.replace(/[^a-z0-9]/gi, ' ').split(/\s+/).filter((w) => w.length > 2);
+  if (keywords.length === 0) return null;
+
+  try {
+    // Build a readable title from the slug
+    const titleWords = slug.split(/[-_\/]/).filter((w) => w.length > 0).map((w) => w.charAt(0).toUpperCase() + w.slice(1));
+    const title = titleWords.join(' ') + ' | Chris Amaya';
+
+    // Find the best matching existing page to use as a template for nav/footer
+    const template = await p.query('SELECT nav, footer, palette FROM caw_content LIMIT 1');
+    const nav = template.rows[0]?.nav || {};
+    const footer = template.rows[0]?.footer || {};
+    const palette = template.rows[0]?.palette || 'emerald';
+
+    // Search all pages for blocks whose data matches our keywords
+    const allPages = await p.query('SELECT slug, blocks FROM caw_content');
+    const scoredBlocks = [];
+
+    for (const page of allPages.rows) {
+      for (const block of (page.blocks || [])) {
+        const blockText = JSON.stringify(block.data || {}).toLowerCase();
+        let score = 0;
+        for (const kw of keywords) {
+          if (blockText.includes(kw.toLowerCase())) score++;
+        }
+        if (score > 0) {
+          scoredBlocks.push({ ...block, score, source: page.slug });
+        }
+      }
+    }
+
+    scoredBlocks.sort((a, b) => b.score - a.score);
+
+    // Pick the best blocks by type — one of each, prioritizing high scores
+    const picked = {};
+    const blockOrder = ['hero', 'terminal_problem', 'solution_cards', 'icon_bullets', 'value_prop', 'authority', 'audit_form', 'cta'];
+    for (const b of scoredBlocks) {
+      if (!picked[b.block_type] && blockOrder.includes(b.block_type)) {
+        picked[b.block_type] = { block_type: b.block_type, data: b.data };
+      }
+    }
+
+    // Build a custom hero if we didn't find a matching one
+    if (!picked.hero) {
+      picked.hero = {
+        block_type: 'hero',
+        data: {
+          badge: titleWords.slice(0, 3).join(' ').toUpperCase(),
+          headline: titleWords.join(' '),
+          subhead: 'Custom architecture and sovereign infrastructure for scaling agencies.',
+          cta_label: '< GET_STARTED />',
+          cta_href: '#audit',
+        },
+      };
+    } else {
+      // Override the hero headline to match the URL topic
+      picked.hero = {
+        block_type: 'hero',
+        data: {
+          ...picked.hero.data,
+          badge: titleWords.slice(0, 3).join(' ').toUpperCase(),
+          headline: titleWords.join(' '),
+        },
+      };
+    }
+
+    // Always include a CTA
+    if (!picked.cta) {
+      picked.cta = {
+        block_type: 'cta',
+        data: { heading: 'Ready to Build?', text: "Let's discuss your project.", label: 'Book a Strategy Call', href: '/contact' },
+      };
+    }
+
+    // Always include audit form
+    if (!picked.audit_form) {
+      picked.audit_form = {
+        block_type: 'audit_form',
+        data: { title: 'Technical Strategy Session', subhead: "Let's audit your stack and find the bottleneck.", form_title: 'INITIATE_HANDSHAKE_PROTOCOL', submit_source: 'ChrisAmayaWork_AutoGen' },
+      };
+    }
+
+    // Assemble in correct order
+    const blocks = blockOrder.filter((t) => picked[t]).map((t) => picked[t]);
+
+    // Find related articles to embed as a value_prop block
+    const articleKeywords = keywords.slice(0, 3).map((k) => `%${k}%`);
+    let relatedArticles = [];
+    if (articleKeywords.length > 0) {
+      const artQ = await p.query(
+        `SELECT slug, title, excerpt FROM caw_articles
+         WHERE status = 'published' AND (${articleKeywords.map((_, i) => `(title ILIKE $${i + 1} OR slug ILIKE $${i + 1})`).join(' OR ')})
+         ORDER BY published_at DESC LIMIT 5`,
+        articleKeywords
+      );
+      relatedArticles = artQ.rows;
+    }
+
+    // Add related articles as a value_prop block if we found some
+    if (relatedArticles.length > 0) {
+      const articleLinks = relatedArticles.map((a) => `<li style="margin-bottom:.75rem"><a href="/blog/${a.slug}" style="color:#00FF94;text-decoration:underline;font-weight:700">${a.title}</a>${a.excerpt ? `<br><span style="color:rgba(255,255,255,.5);font-size:.875rem">${a.excerpt}</span>` : ''}</li>`).join('');
+      const relBlock = {
+        block_type: 'value_prop',
+        data: {
+          title: 'Related Articles',
+          body: `<ul style="list-style:none;padding:0">${articleLinks}</ul>`,
+        },
+      };
+      // Insert before the last CTA
+      const ctaIdx = blocks.findIndex((b) => b.block_type === 'cta');
+      if (ctaIdx >= 0) blocks.splice(ctaIdx, 0, relBlock);
+      else blocks.push(relBlock);
+    }
+
+    // Save to database permanently
+    await p.query(
+      `INSERT INTO caw_content (slug, title, blocks, palette, nav, footer)
+       VALUES ($1, $2, $3::jsonb, $4, $5::jsonb, $6::jsonb)
+       ON CONFLICT (slug) DO NOTHING`,
+      [slug, title, JSON.stringify(blocks), palette, JSON.stringify(nav), JSON.stringify(footer)]
+    );
+
+    return {
+      page: { id: slug, title, slug },
+      blocks: blocks.map((b) => ({ block_type: b.block_type, data: b.data || {} })),
+      palette,
+      nav,
+      footer,
+    };
+  } catch (err) {
+    console.error('[db] autoGeneratePage:', err.message);
+    return null;
+  }
+}
+
 export async function getArticlesForService(serviceSlug) {
   const p = getPool();
   if (!p) return [];
