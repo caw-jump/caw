@@ -222,6 +222,212 @@ const result = await pool.query('SELECT * FROM caw_articles');</code></pre>
 <a href="https://jumpstartscaling.com" style="color:#00FF94;text-decoration:underline" target="_blank" rel="noopener">Jumpstart Scaling</a>
 ```
 
+## Complete Database: Pages (caw_content)
+
+The site has 20 pages stored in `caw_content`. Each page has a `blocks` JSONB column containing an array of block objects. The full SQL for all 20 pages is in the companion file `complete-db-seed.sql`. Here is the page schema and block reference:
+
+### Page Schema (caw_content)
+
+```sql
+CREATE TABLE caw_content (
+  slug    TEXT PRIMARY KEY,       -- URL path (empty string = homepage)
+  title   TEXT NOT NULL,
+  blocks  JSONB NOT NULL DEFAULT '[]',  -- Array of {block_type, data}
+  palette TEXT NOT NULL DEFAULT 'emerald',
+  nav     JSONB,                  -- Navigation links
+  footer  JSONB                   -- Footer content
+);
+```
+
+### All 20 Pages
+
+| Slug | Title | Block Types |
+|------|-------|-------------|
+| *(empty)* | The One-Stop Architect \| Chris Amaya | hero, terminal_problem, solution_cards, authority, audit_form, calculator, survey |
+| about | About \| Chris Amaya — Unicorn Developer & Architect | hero, diagnosis, icon_bullets, authority, audit_form, cta |
+| audit | Technical Audit \| Chris Amaya — Free Stack Audit | hero, terminal_problem, solution_cards, audit_form, cta |
+| blog | Blog & Knowledge Base \| Chris Amaya | hero, solution_cards, icon_bullets, value_prop, authority, cta |
+| contact | Contact \| Chris Amaya — Book a Technical Strategy Session | hero, icon_bullets, audit_form, cta |
+| guide/how-i-build | How I Build \| Chris Amaya — Architecture Methodology | hero, icon_bullets, value_prop, authority, cta |
+| knowledge-base | Knowledge Base \| Chris Amaya — Redirecting to Blog | hero, cta |
+| privacy | Privacy Policy \| Chris Amaya | value_prop |
+| resources/calculators | Free Growth Calculators \| Chris Amaya | hero, solution_cards, icon_bullets, calculator, cta |
+| search | Search \| Chris Amaya | hero, solution_cards, icon_bullets, cta |
+| services | Services \| Chris Amaya — Custom Software Architecture | hero, solution_cards, icon_bullets, authority, audit_form, cta |
+| services/custom-apps/3d-visual | Three.js, Rive & 3D Visual | hero, icon_bullets, value_prop, cta |
+| services/custom-apps/calculators | Custom React Calculators | hero, icon_bullets, value_prop, calculator, cta |
+| services/custom-apps/database | PostgreSQL Schema Design | hero, icon_bullets, value_prop, cta |
+| services/custom-apps/frontend | Astro, React & Vite Frontend | hero, icon_bullets, value_prop, cta |
+| services/custom-apps/full-stack | Full-Stack Astro + FastAPI | hero, icon_bullets, value_prop, cta |
+| services/custom-apps/google-apis | Google Solar, Roofing & Maps API | hero, icon_bullets, value_prop, cta |
+| services/custom-apps/python-api | Python & FastAPI Backend | hero, icon_bullets, value_prop, cta |
+| services/custom-apps/wordpress | Headless WordPress | hero, icon_bullets, value_prop, cta |
+| terms | Terms of Service \| Chris Amaya | value_prop |
+
+### Available Block Types and Their Data Fields
+
+To update a page, you modify its `blocks` JSONB array. Each block is `{"block_type": "...", "data": {...}}`. Here are all supported block types:
+
+#### `hero`
+```json
+{
+  "block_type": "hero",
+  "data": {
+    "badge": "STATUS: ACCEPTING 2 CLIENTS FOR Q1",
+    "headline": "I ARCHITECT SYSTEMS<br class=\"hidden md:block\" />THAT <span class=\"text-neon\">SCALE AGENCIES</span>.",
+    "subhead": "Stop gluing your business together with Zapier and hope.\nI build Sovereign Infrastructure that works while you sleep.",
+    "cta_label": "< DEPLOY_ARCHITECT />",
+    "cta_href": "#audit",
+    "warning_text": "// WARNING: Technical Strategy Session Only. No Sales Fluff."
+  }
+}
+```
+
+#### `terminal_problem`
+```json
+{
+  "block_type": "terminal_problem",
+  "data": {
+    "eyebrow": "// SYSTEM_CRITICAL_ERROR",
+    "title": "The \"Frankenstein\" Stack Is Killing Your Margins.",
+    "body": "You have revenue. You have product-market fit...",
+    "bullets": ["⚠ SALES TEAM IS BLIND (CRM not syncing)", "⚠ ZAPIER BILL IS SCALING FASTER THAN REVENUE"],
+    "terminal_logs": [
+      {"time": "09:00:01", "msg": "[ERROR] Webhook Timeout: Zapier webhook failed to respond."},
+      {"time": "09:05:23", "msg": "[CRITICAL] Lead Loss: 5 leads failed to sync to GHL."}
+    ],
+    "status_text": "_ SYSTEM_UNSTABLE"
+  }
+}
+```
+
+#### `solution_cards`
+```json
+{
+  "block_type": "solution_cards",
+  "data": {
+    "eyebrow": "// THE_FIX",
+    "title": "Sovereign Infrastructure",
+    "cards": [
+      {"title": "< INFRASTRUCTURE />", "body": "Self-hosted n8n automation engines...", "border_color": "neon-blue"},
+      {"title": "< INTELLIGENCE />", "body": "Private LLM agents...", "border_color": "neon-green"},
+      {"title": "< REVENUE_PHYSICS />", "body": "Server-side tracking...", "border_color": "neon-pink"}
+    ]
+  }
+}
+```
+Border colors: `neon-blue` (#00B8FF), `neon-green` (#00FF94), `neon-pink` (#FF00FF)
+
+#### `authority`
+```json
+{
+  "block_type": "authority",
+  "data": {
+    "title": "I Am Not A Freelancer.<br>I Am An Architect.",
+    "body": "<p>HTML content with <a href=\"...\">links</a></p>",
+    "stats": [
+      {"value": "50+", "label": "Systems Built"},
+      {"value": "$10M+", "label": "Revenue Supported"}
+    ]
+  }
+}
+```
+
+#### `audit_form`
+```json
+{
+  "block_type": "audit_form",
+  "data": {
+    "title": "Technical Strategy Session",
+    "subhead": "Let's audit your stack and find the bottleneck.",
+    "form_title": "INITIATE_HANDSHAKE_PROTOCOL",
+    "submit_source": "ChrisAmayaWork"
+  }
+}
+```
+
+#### `cta`
+```json
+{
+  "block_type": "cta",
+  "data": {
+    "heading": "Ready to Scale?",
+    "text": "Book a strategy call.",
+    "href": "#contact",
+    "label": "Start Your Moat Audit"
+  }
+}
+```
+
+#### `value_prop`
+```json
+{
+  "block_type": "value_prop",
+  "data": {
+    "title": "Featured: The Sovereign Stack Guide",
+    "body": "<p>HTML content here. Supports <strong>bold</strong>, <code>code</code>, <a href=\"...\">links</a>, <h3>subheadings</h3></p>"
+  }
+}
+```
+
+#### `icon_bullets`
+```json
+{
+  "block_type": "icon_bullets",
+  "data": {
+    "title": "Topic Index",
+    "bullets": [
+      {"icon": "🏗️", "title": "Sovereign Infrastructure", "text": "Why self-hosted beats SaaS past $1M revenue."},
+      {"icon": "🤖", "title": "Private AI Agents", "text": "Running Llama, Mistral on your own VPS."}
+    ]
+  }
+}
+```
+
+#### `calculator`
+```json
+{"block_type": "calculator", "data": {"section_title": "Engineering Resources"}}
+```
+
+#### `survey`
+```json
+{"block_type": "survey", "data": {"section_title": "Let's Build It Right."}}
+```
+
+#### `diagnosis`
+```json
+{
+  "block_type": "diagnosis",
+  "data": {
+    "eyebrow": "// THE_ARCHITECT",
+    "title": "The Unicorn Developer",
+    "body": "Description text...",
+    "video_src": "/assets/videos/zombiebabyzaiper.mp4"
+  }
+}
+```
+
+### SQL Format for Updating Pages
+
+```sql
+INSERT INTO caw_content (slug, title, blocks, palette, nav, footer)
+VALUES (
+  'your-slug',
+  'Page Title | Chris Amaya',
+  '[{"block_type":"hero","data":{"badge":"BADGE","headline":"Headline","subhead":"Subhead","cta_label":"CTA","cta_href":"#audit"}},{"block_type":"cta","data":{"heading":"Ready?","text":"Book a call.","label":"Book","href":"/contact"}}]'::jsonb,
+  'emerald',
+  '{"portfolio":[{"name":"The Problem","href":"/#hook"},{"name":"Architecture","href":"/#solution"}],"custom_apps":[{"name":"Python & FastAPI","href":"/services/custom-apps/python-api"}],"growth_tools":[{"name":"Jumpstart Scaling","href":"https://jumpstartscaling.com"}],"cta":{"label":"INITIATE_HANDSHAKE","href":"#audit"}}'::jsonb,
+  '{"tagline":"The Unicorn Developer.","copyright":"Chris Amaya"}'::jsonb
+)
+ON CONFLICT (slug) DO UPDATE SET
+  title = EXCLUDED.title, blocks = EXCLUDED.blocks,
+  palette = EXCLUDED.palette, nav = EXCLUDED.nav, footer = EXCLUDED.footer;
+```
+
+**Important**: The `nav` and `footer` JSONB is the same for every page. Copy it exactly from the companion file `complete-db-seed.sql`.
+
+---
+
 ## Existing Articles (for context and updates)
 
 ### Article 1: postgresql-jsonb-vs-relational
@@ -275,11 +481,19 @@ const result = await pool.query('SELECT * FROM caw_articles');</code></pre>
 
 When I ask you to:
 
-1. **Write a new article**: Generate a complete SQL INSERT with rich HTML content using the styling elements above. Make it 800–2000 words. Include code blocks, callout boxes, tables, and internal links where appropriate. Every article should end with a CTA linking to `/contact` or `#audit`.
+1. **Write a new article**: Generate a complete SQL INSERT into `caw_articles` with rich HTML content using the styling elements above. Make it 800–2000 words. Include code blocks, callout boxes, tables, and internal links where appropriate. Every article should end with a CTA linking to `/contact` or `#audit`.
 
-2. **Update an existing article**: Generate a SQL INSERT...ON CONFLICT DO UPDATE statement with the full updated content. Expand sections, add code examples, add callout boxes, improve the formatting using the HTML components above.
+2. **Update an existing article**: Generate a SQL INSERT...ON CONFLICT DO UPDATE statement for `caw_articles` with the full updated content. Expand sections, add code examples, add callout boxes, improve the formatting using the HTML components above.
 
-3. **Generate a batch**: Return multiple SQL statements separated by `-- ========` dividers.
+3. **Update a page**: Generate a SQL INSERT...ON CONFLICT DO UPDATE statement for `caw_content` with the complete blocks array. Include ALL blocks for the page (not just the changed ones). Copy the `nav` and `footer` JSON exactly from the companion file.
+
+4. **Create a new page**: Generate a SQL INSERT for `caw_content` with a slug, title, blocks array, palette, and the standard nav/footer JSON.
+
+5. **Generate a batch**: Return multiple SQL statements separated by `-- ========` dividers.
+
+## Companion File
+
+The file `complete-db-seed.sql` (in the same `prompts/` directory) contains the full SQL INSERT statements for all 20 pages and all 3 articles — with the exact `nav` and `footer` JSONB, every block with its full data, and every article with its full HTML content. Reference this file when you need exact current content.
 
 ## Important Rules
 
@@ -291,3 +505,6 @@ When I ask you to:
 - Keep excerpts under 150 characters
 - Slugs must be lowercase, hyphen-separated, no special characters
 - Use `ON CONFLICT (slug) DO UPDATE` so the same SQL can be re-run safely
+- When updating pages, always include the COMPLETE blocks array — partial updates are not supported
+- The `nav` and `footer` JSONB must be identical across all pages — copy from an existing page
+- Block types not listed in the "Available Block Types" section above will be silently ignored by the renderer
