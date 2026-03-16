@@ -40,3 +40,44 @@ export async function getPageData(slug) {
     return null;
   }
 }
+
+export async function getArticles({ category, limit = 20, offset = 0 } = {}) {
+  const p = getPool();
+  if (!p) return [];
+  try {
+    const params = [];
+    let where = "status = 'published'";
+    if (category) {
+      params.push(category);
+      where += ` AND category = $${params.length}`;
+    }
+    params.push(limit, offset);
+    const r = await p.query(
+      `SELECT slug, title, excerpt, category, tags, author, og_image, published_at
+       FROM caw_articles WHERE ${where}
+       ORDER BY published_at DESC NULLS LAST
+       LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      params
+    );
+    return r.rows;
+  } catch (err) {
+    console.error('[db] getArticles:', err.message);
+    return [];
+  }
+}
+
+export async function getArticle(slug) {
+  const p = getPool();
+  if (!p) return null;
+  try {
+    const r = await p.query(
+      `SELECT slug, title, excerpt, content, category, tags, author, og_image, published_at
+       FROM caw_articles WHERE slug = $1 AND status = 'published' LIMIT 1`,
+      [slug]
+    );
+    return r.rows[0] || null;
+  } catch (err) {
+    console.error('[db] getArticle:', err.message);
+    return null;
+  }
+}

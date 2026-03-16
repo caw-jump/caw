@@ -9,7 +9,7 @@ import fastifyStatic from '@fastify/static';
 import ejs from 'ejs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { getPageData, getPool } from './db.js';
+import { getPageData, getPool, getArticles, getArticle } from './db.js';
 import { renderBlocks } from './blocks.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -120,6 +120,45 @@ async function handlePage(req, reply, slug) {
     currentPath: req.url.split('?')[0] || '/',
   });
 }
+
+// Blog listing — shows articles from caw_articles + the blog landing page blocks
+fastify.get('/blog', async (req, reply) => {
+  const category = req.query.category || null;
+  const articles = await getArticles({ category, limit: 50 });
+  const pageData = await getPageData('blog');
+  const nav = pageData?.nav || {};
+  const footer = pageData?.footer || {};
+  const palette = pageData?.palette || 'emerald';
+  const blocksHtml = pageData ? renderBlocks(pageData.blocks) : '';
+  return reply.viewAsync('blog.ejs', {
+    title: pageData?.page?.title || 'Blog | Chris Amaya',
+    description: 'Architecture, AI Systems, and Growth Engineering.',
+    siteName: footer?.copyright || 'Chris Amaya',
+    nav, footer, palette, blocksHtml, articles,
+    currentPath: '/blog',
+    activeCategory: category,
+  });
+});
+
+// Single article — rendered from caw_articles
+fastify.get('/blog/:slug', async (req, reply) => {
+  const article = await getArticle(req.params.slug);
+  if (!article) {
+    reply.code(404);
+    return reply.viewAsync('404.ejs', { siteName: 'Chris Amaya', currentPath: req.url.split('?')[0] });
+  }
+  const pageData = await getPageData('blog');
+  const nav = pageData?.nav || {};
+  const footer = pageData?.footer || {};
+  const palette = pageData?.palette || 'emerald';
+  return reply.viewAsync('article.ejs', {
+    title: `${article.title} | Chris Amaya`,
+    description: article.excerpt || '',
+    siteName: footer?.copyright || 'Chris Amaya',
+    nav, footer, palette, article,
+    currentPath: `/blog/${article.slug}`,
+  });
+});
 
 // Page routes — DB-driven, no build
 fastify.get('/', (req, reply) => handlePage(req, reply, ''));

@@ -1,0 +1,22 @@
+<% const articleHtml = (() => {
+  const a = article;
+  const date = a.published_at ? new Date(a.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+  const tagHtml = (a.tags || []).map(t => `<span style="font-size:.7rem;padding:.2rem .6rem;border:1px solid rgba(0,255,148,.3);border-radius:.25rem;color:#00FF94;font-family:ui-monospace,monospace">${t}</span>`).join(' ');
+  return `<section style="background:#050505;padding:6rem 0 4rem">
+    <div style="max-width:800px;margin:0 auto;padding:0 1.5rem">
+      <a href="/blog" style="display:inline-block;margin-bottom:2rem;font-size:.8rem;color:#00FF94;font-family:ui-monospace,monospace;text-decoration:none">&larr; Back to Blog</a>
+      <div style="margin-bottom:1rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+        <span style="font-size:.8rem;color:rgba(255,255,255,.5);font-family:ui-monospace,monospace">${date}</span>
+        <span style="font-size:.75rem;text-transform:uppercase;color:#00B8FF;font-family:ui-monospace,monospace">${a.category || ''}</span>
+      </div>
+      <h1 style="font-size:2.5rem;font-weight:900;color:#fff;line-height:1.2;margin-bottom:1rem;letter-spacing:-1px">${a.title}</h1>
+      ${a.excerpt ? `<p style="font-size:1.1rem;color:rgba(255,255,255,.6);margin-bottom:1.5rem;font-family:ui-monospace,monospace">${a.excerpt}</p>` : ''}
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:2rem">${tagHtml}</div>
+      <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:2rem" class="prose prose-invert">${a.content}</div>
+      <div style="margin-top:3rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,.1);text-align:center">
+        <a href="/blog" style="color:#00FF94;font-family:ui-monospace,monospace;font-size:.85rem">&larr; Back to all posts</a>
+      </div>
+    </div>
+  </section>`;
+})(); %>
+<%- include('layout', { body: articleHtml, title, description, siteName, nav, footer, palette, currentPath }) %>

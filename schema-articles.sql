@@ -1,33 +1,17 @@
--- chrisamaya.work schema
+-- caw_articles: blog/knowledge-base articles for chrisamaya.work
+-- Insert articles from any source (god-mode-api, manual, AI pipeline).
+-- The SSR server reads published articles and renders them at /blog/:slug.
 
--- Table 1: Complete seed data
-CREATE TABLE IF NOT EXISTS caw_seed (
-  key TEXT PRIMARY KEY,
-  value JSONB NOT NULL
-);
-
--- Table 2: Content pages (one row per page)
-CREATE TABLE IF NOT EXISTS caw_content (
-  slug TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  blocks JSONB NOT NULL DEFAULT '[]',
-  palette TEXT NOT NULL DEFAULT 'emerald',
-  nav JSONB,
-  footer JSONB,
-  local_seo JSONB
-);
-
--- Table 3: Blog/knowledge-base articles
 CREATE TABLE IF NOT EXISTS caw_articles (
   slug        TEXT PRIMARY KEY,
   title       TEXT NOT NULL,
   excerpt     TEXT,
-  content     TEXT NOT NULL,
+  content     TEXT NOT NULL,                -- HTML body
   category    TEXT NOT NULL DEFAULT 'infrastructure',
-  tags        JSONB NOT NULL DEFAULT '[]',
+  tags        JSONB NOT NULL DEFAULT '[]',  -- ["postgres","fastapi"]
   author      TEXT NOT NULL DEFAULT 'Chris Amaya',
-  og_image    TEXT,
-  status      TEXT NOT NULL DEFAULT 'draft',
+  og_image    TEXT,                         -- Open Graph image URL
+  status      TEXT NOT NULL DEFAULT 'draft',-- draft | published | archived
   published_at TIMESTAMPTZ,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
