@@ -9,7 +9,7 @@ import fastifyStatic from '@fastify/static';
 import ejs from 'ejs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { getPageData, getPool, getArticles, getArticle, searchContent, getRelatedArticles, getArticleNav, getCategoryCounts, getRecentArticles, getArticlesForService, findBestRedirect, autoGeneratePage } from './db.js';
+import { getPageData, getPool, getArticles, getArticle, searchContent, getRelatedArticles, getArticleNav, getCategoryCounts, getRecentArticles, getArticlesForService, findBestRedirect, getPseoPage, autoGeneratePage } from './db.js';
 import { renderBlocks } from './blocks.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -315,7 +315,27 @@ fastify.setNotFoundHandler(async (req, reply) => {
     }
   }
 
-  // 5. Auto-generate page from existing blocks — saves permanently
+  // 5. pSEO page from content_matrix (1,800 service×location combos)
+  if (slug && !slug.includes('.')) {
+    const pseo = await getPseoPage(slug);
+    if (pseo) {
+      const { page, blocks, palette, nav: pNav, footer: pFooter, meta_description } = pseo;
+      const siteName = pFooter?.copyright || 'Chris Amaya';
+      const blocksHtml = renderBlocks(blocks);
+      return reply.viewAsync('page.ejs', {
+        title: page.title || 'Chris Amaya',
+        description: meta_description || 'Custom architecture and sovereign infrastructure.',
+        siteName,
+        nav: pNav || {},
+        footer: pFooter || {},
+        palette: palette || 'emerald',
+        blocksHtml,
+        currentPath: '/' + slug,
+      });
+    }
+  }
+
+  // 6. Auto-generate page from existing blocks — saves permanently
   if (slug && !slug.includes('.') && slug.length > 3 && slug.length < 120) {
     const generated = await autoGeneratePage(slug);
     if (generated) {
