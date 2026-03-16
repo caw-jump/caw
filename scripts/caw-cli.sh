@@ -147,15 +147,89 @@ cmd_insert_file() {
     echo -e "${P}File not found: $1${R}"
     return 1
   fi
-  PGSSLMODE=require psql "$DB_URL" -f "$1" 2>/dev/null
-  echo -e "${G}✓ SQL file executed.${R}"
+  
+  echo -e "${D}Running ${1}...${R}"
+  START=$(date +%s%N 2>/dev/null || python3 -c "import time; print(int(time.time()*1000000000))")
+  OUTPUT=$(PGSSLMODE=require psql "$DB_URL" -f "$1" 2>&1)
+  EXIT_CODE=$?
+  END=$(date +%s%N 2>/dev/null || python3 -c "import time; print(int(time.time()*1000000000))")
+  
+  if [ -n "$START" ] && [ -n "$END" ]; then
+    DURATION_MS=$(( (END - START) / 1000000 ))
+  else
+    DURATION_MS="?"
+  fi
+
+  echo ""
+  if [ $EXIT_CODE -ne 0 ]; then
+    echo -e "${P}✗ SQL Error:${R}"
+    echo "$OUTPUT"
+    return 1
+  fi
+
+  INSERT_COUNT=$(echo "$OUTPUT" | grep -c "INSERT")
+  echo -e "${G}✓ Success${R} — ${INSERT_COUNT} statement(s) from ${1} in ${DURATION_MS}ms"
+  echo ""
+
+  SLUGS=$(cat "$1" | grep -oE "'[a-z0-9][a-z0-9-]+'" | head -10 | tr -d "'")
+  for SLUG in $SLUGS; do
+    ROW=$(run_sql "SELECT slug, title, status FROM caw_articles WHERE slug = '${SLUG}' LIMIT 1" 2>/dev/null)
+    if [ -n "$ROW" ]; then
+      TITLE=$(echo "$ROW" | cut -d'|' -f2)
+      echo -e "  ${G}●${R} ${W}${TITLE}${R}"
+      echo -e "    ${B}https://chrisamaya.work/blog/${SLUG}${R}"
+      echo ""
+    fi
+  done
 }
 
 cmd_insert_sql() {
   echo -e "${W}Paste your SQL INSERT statement. Press Ctrl+D when done:${R}"
+  echo ""
   SQL=$(cat)
-  echo "$SQL" | PGSSLMODE=require psql "$DB_URL" 2>/dev/null
-  echo -e "${G}✓ Executed.${R}"
+  
+  if [ -z "$SQL" ]; then
+    echo -e "${P}✗ Empty input. Nothing executed.${R}"
+    return 1
+  fi
+
+  START=$(date +%s%N 2>/dev/null || python3 -c "import time; print(int(time.time()*1000000000))")
+  OUTPUT=$(echo "$SQL" | PGSSLMODE=require psql "$DB_URL" 2>&1)
+  EXIT_CODE=$?
+  END=$(date +%s%N 2>/dev/null || python3 -c "import time; print(int(time.time()*1000000000))")
+  
+  # Calculate duration
+  if [ -n "$START" ] && [ -n "$END" ]; then
+    DURATION_MS=$(( (END - START) / 1000000 ))
+  else
+    DURATION_MS="?"
+  fi
+
+  echo ""
+  if [ $EXIT_CODE -ne 0 ]; then
+    echo -e "${P}✗ SQL Error:${R}"
+    echo "$OUTPUT"
+    return 1
+  fi
+
+  # Count how many inserts/updates happened
+  INSERT_COUNT=$(echo "$OUTPUT" | grep -c "INSERT")
+  
+  echo -e "${G}✓ Success${R} — ${INSERT_COUNT} statement(s) executed in ${DURATION_MS}ms"
+  echo ""
+
+  # Show what was just inserted/updated
+  SLUGS=$(echo "$SQL" | grep -oE "'[a-z0-9][a-z0-9-]+'" | head -10 | tr -d "'")
+  for SLUG in $SLUGS; do
+    ROW=$(run_sql "SELECT slug, title, status FROM caw_articles WHERE slug = '${SLUG}' LIMIT 1" 2>/dev/null)
+    if [ -n "$ROW" ]; then
+      TITLE=$(echo "$ROW" | cut -d'|' -f2)
+      STATUS=$(echo "$ROW" | cut -d'|' -f3)
+      echo -e "  ${G}●${R} ${W}${TITLE}${R}"
+      echo -e "    ${B}https://chrisamaya.work/blog/${SLUG}${R}"
+      echo ""
+    fi
+  done
 }
 
 cmd_delete() {
