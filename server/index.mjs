@@ -9,7 +9,7 @@ import fastifyStatic from '@fastify/static';
 import ejs from 'ejs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { getPageData, getPool, getArticles, getArticle } from './db.js';
+import { getPageData, getPool, getArticles, getArticle, searchContent, getRelatedArticles, getArticleNav, getCategoryCounts, getRecentArticles, getArticlesForService } from './db.js';
 import { renderBlocks } from './blocks.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -97,7 +97,7 @@ fastify.get('/health', async (req, reply) => {
   }
 });
 
-// Page handler — DB-driven, no build
+// Page handler — DB-driven, no build, with service cross-links
 async function handlePage(req, reply, slug) {
   const pageData = await getPageData(slug);
   if (!pageData) {
@@ -107,7 +107,20 @@ async function handlePage(req, reply, slug) {
 
   const { page, blocks, palette, nav, footer } = pageData;
   const siteName = footer?.copyright || 'Chris Amaya';
-  const blocksHtml = renderBlocks(blocks);
+  let blocksHtml = renderBlocks(blocks);
+
+  // Inject related articles for service pages
+  const serviceMatch = slug.match(/^services\/custom-apps\/(.+)$/);
+  if (serviceMatch) {
+    const serviceArticles = await getArticlesForService(serviceMatch[1]);
+    if (serviceArticles.length > 0) {
+      const cardsHtml = serviceArticles.map((a) => {
+        const date = a.published_at ? new Date(a.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+        return `<a href="/blog/${a.slug}" style="display:block;padding:1.25rem;border:1px solid rgba(255,255,255,.1);border-radius:.5rem;background:rgba(255,255,255,.02);transition:border-color .2s" onmouseover="this.style.borderColor='rgba(0,255,148,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)'"><span style="font-size:.7rem;color:rgba(255,255,255,.4);font-family:ui-monospace,monospace">${date}</span><h4 style="font-size:1rem;font-weight:700;color:#fff;margin:.25rem 0">${a.title}</h4>${a.excerpt ? `<p style="font-size:.8rem;color:rgba(255,255,255,.5);margin:0">${a.excerpt}</p>` : ''}</a>`;
+      }).join('');
+      blocksHtml += `<section style="background:#050505;padding:4rem 0"><div style="max-width:1400px;margin:0 auto;padding:0 1.5rem"><h2 style="font-family:ui-monospace,monospace;font-size:1rem;color:#00FF94;margin-bottom:1.5rem">// RELATED_FROM_BLOG</h2><div style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">${cardsHtml}</div><a href="/blog" style="display:inline-block;margin-top:1.5rem;color:rgba(255,255,255,.5);font-size:.85rem;font-family:ui-monospace,monospace">View all posts &rarr;</a></div></section>`;
+    }
+  }
 
   return reply.viewAsync('page.ejs', {
     title: page.title || 'Chris Amaya',
@@ -124,44 +137,101 @@ async function handlePage(req, reply, slug) {
 // Blog listing — shows articles from caw_articles + the blog landing page blocks
 fastify.get('/blog', async (req, reply) => {
   const category = req.query.category || null;
-  const articles = await getArticles({ category, limit: 50 });
-  const pageData = await getPageData('blog');
+  const [articles, categoryCounts, pageData] = await Promise.all([
+    getArticles({ category, limit: 50 }),
+    getCategoryCounts(),
+    getPageData('blog'),
+  ]);
   const nav = pageData?.nav || {};
   const footer = pageData?.footer || {};
   const palette = pageData?.palette || 'emerald';
   const blocksHtml = pageData ? renderBlocks(pageData.blocks) : '';
   return reply.viewAsync('blog.ejs', {
-    title: pageData?.page?.title || 'Blog | Chris Amaya',
+    title: category ? `${category.charAt(0).toUpperCase() + category.slice(1)} Articles | Chris Amaya` : (pageData?.page?.title || 'Blog | Chris Amaya'),
     description: 'Architecture, AI Systems, and Growth Engineering.',
     siteName: footer?.copyright || 'Chris Amaya',
-    nav, footer, palette, blocksHtml, articles,
+    nav, footer, palette, blocksHtml, articles, categoryCounts,
     currentPath: '/blog',
     activeCategory: category,
   });
 });
 
-// Single article — rendered from caw_articles
+// Single article — rendered from caw_articles with related + nav
 fastify.get('/blog/:slug', async (req, reply) => {
   const article = await getArticle(req.params.slug);
   if (!article) {
     reply.code(404);
     return reply.viewAsync('404.ejs', { siteName: 'Chris Amaya', currentPath: req.url.split('?')[0] });
   }
-  const pageData = await getPageData('blog');
+  const [related, articleNav, pageData] = await Promise.all([
+    getRelatedArticles(article.slug, article.category, 3),
+    getArticleNav(article.slug),
+    getPageData('blog'),
+  ]);
   const nav = pageData?.nav || {};
   const footer = pageData?.footer || {};
   const palette = pageData?.palette || 'emerald';
+  const wordCount = (article.content || '').replace(/<[^>]*>/g, '').split(/\s+/).length;
+  const readingTime = Math.max(1, Math.round(wordCount / 230));
   return reply.viewAsync('article.ejs', {
     title: `${article.title} | Chris Amaya`,
     description: article.excerpt || '',
     siteName: footer?.copyright || 'Chris Amaya',
-    nav, footer, palette, article,
+    nav, footer, palette, article, related, articleNav, readingTime,
     currentPath: `/blog/${article.slug}`,
   });
 });
 
-// Page routes — DB-driven, no build
-fastify.get('/', (req, reply) => handlePage(req, reply, ''));
+// Search page with results
+fastify.get('/search', async (req, reply) => {
+  const q = req.query.q || '';
+  const [results, pageData] = await Promise.all([
+    q ? searchContent(q) : Promise.resolve({ articles: [], pages: [] }),
+    getPageData('search'),
+  ]);
+  const nav = pageData?.nav || {};
+  const footer = pageData?.footer || {};
+  const palette = pageData?.palette || 'emerald';
+  return reply.viewAsync('search.ejs', {
+    title: q ? `Search: ${q} | Chris Amaya` : 'Search | Chris Amaya',
+    description: 'Search across all content.',
+    siteName: footer?.copyright || 'Chris Amaya',
+    nav, footer, palette, query: q, results,
+    currentPath: '/search',
+  });
+});
+
+// RSS feed
+fastify.get('/blog/rss.xml', async (req, reply) => {
+  const articles = await getArticles({ limit: 30 });
+  const items = articles.map((a) => {
+    const date = a.published_at ? new Date(a.published_at).toUTCString() : '';
+    return `<item><title><![CDATA[${a.title}]]></title><link>${SITE_URL}/blog/${a.slug}</link><description><![CDATA[${a.excerpt || ''}]]></description><pubDate>${date}</pubDate><category>${a.category || ''}</category><guid>${SITE_URL}/blog/${a.slug}</guid></item>`;
+  }).join('\n');
+  reply.header('Content-Type', 'application/rss+xml; charset=utf-8');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n<channel>\n<title>Chris Amaya — Blog</title>\n<link>${SITE_URL}/blog</link>\n<description>Architecture, AI Systems, and Growth Engineering.</description>\n<atom:link href="${SITE_URL}/blog/rss.xml" rel="self" type="application/rss+xml"/>\n${items}\n</channel>\n</rss>`;
+});
+
+// Homepage with recent articles
+fastify.get('/', async (req, reply) => {
+  const [pageData, recentArticles] = await Promise.all([
+    getPageData(''),
+    getRecentArticles(4),
+  ]);
+  if (!pageData) {
+    reply.code(404);
+    return reply.viewAsync('404.ejs', { siteName: 'Chris Amaya', currentPath: '/' });
+  }
+  const { page, blocks, palette, nav, footer } = pageData;
+  const blocksHtml = renderBlocks(blocks);
+  const siteName = footer?.copyright || 'Chris Amaya';
+  return reply.viewAsync('homepage.ejs', {
+    title: page.title || 'Chris Amaya',
+    description: 'Stop hiring freelancers. Start building an empire.',
+    siteName, nav: nav || {}, footer: footer || {}, palette: palette || 'emerald',
+    blocksHtml, recentArticles, currentPath: '/',
+  });
+});
 
 fastify.setNotFoundHandler(async (req, reply) => {
   const pathname = (req.url || '/').replace(/\?.*$/, '').replace(/\/$/, '') || '/';
