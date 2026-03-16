@@ -259,6 +259,62 @@ export async function findBestRedirect(slug) {
   }
 }
 
+export async function getAllLocations() {
+  const p = getPool();
+  if (!p) return [];
+  try {
+    const r = await p.query('SELECT id, city, state, slug FROM locations ORDER BY state, city');
+    return r.rows;
+  } catch (err) { console.error('[db] getAllLocations:', err.message); return []; }
+}
+
+export async function getAllServices() {
+  const p = getPool();
+  if (!p) return [];
+  try {
+    const r = await p.query('SELECT id, service_type, sub_niche, slug FROM pseo_services ORDER BY service_type');
+    return r.rows;
+  } catch (err) { console.error('[db] getAllServices:', err.message); return []; }
+}
+
+export async function getServicePages(serviceSlug) {
+  const p = getPool();
+  if (!p) return { service: null, pages: [] };
+  try {
+    const svc = await p.query('SELECT service_type, sub_niche, slug FROM pseo_services WHERE slug = $1 LIMIT 1', [serviceSlug]);
+    if (!svc.rows[0]) return { service: null, pages: [] };
+    const pages = await p.query(
+      `SELECT cm.slug, cm.title, l.city, l.state, l.slug AS location_slug
+       FROM content_matrix cm JOIN locations l ON l.id = cm.location_id
+       JOIN pseo_services ps ON ps.id = cm.service_id
+       WHERE ps.slug = $1 ORDER BY l.state, l.city`,
+      [serviceSlug]
+    );
+    return { service: svc.rows[0], pages: pages.rows };
+  } catch (err) { console.error('[db] getServicePages:', err.message); return { service: null, pages: [] }; }
+}
+
+export async function getLocationPages(locationSlug) {
+  const p = getPool();
+  if (!p) return { location: null, pages: [] };
+  try {
+    const loc = await p.query('SELECT city, state, slug FROM locations WHERE slug = $1 LIMIT 1', [locationSlug]);
+    if (!loc.rows[0]) return { location: null, pages: [] };
+    const geo = await p.query(
+      "SELECT data FROM geo_intelligence WHERE cluster_key = $1 LIMIT 1",
+      [loc.rows[0].city.toLowerCase().replace(/[^a-z]/g, '-') + '-' + loc.rows[0].state.toLowerCase()]
+    );
+    const pages = await p.query(
+      `SELECT cm.slug, cm.title, ps.service_type, ps.sub_niche, ps.slug AS service_slug
+       FROM content_matrix cm JOIN pseo_services ps ON ps.id = cm.service_id
+       JOIN locations l ON l.id = cm.location_id
+       WHERE l.slug = $1 ORDER BY ps.service_type`,
+      [locationSlug]
+    );
+    return { location: loc.rows[0], geo: geo.rows[0]?.data || {}, pages: pages.rows };
+  } catch (err) { console.error('[db] getLocationPages:', err.message); return { location: null, pages: [] }; }
+}
+
 export async function getPseoPage(slug) {
   const p = getPool();
   if (!p) return null;

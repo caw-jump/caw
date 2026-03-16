@@ -9,7 +9,7 @@ import fastifyStatic from '@fastify/static';
 import ejs from 'ejs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { getPageData, getPool, getArticles, getArticle, searchContent, getRelatedArticles, getArticleNav, getCategoryCounts, getRecentArticles, getArticlesForService, findBestRedirect, getPseoPage, autoGeneratePage } from './db.js';
+import { getPageData, getPool, getArticles, getArticle, searchContent, getRelatedArticles, getArticleNav, getCategoryCounts, getRecentArticles, getArticlesForService, findBestRedirect, getPseoPage, autoGeneratePage, getAllLocations, getAllServices, getServicePages, getLocationPages } from './db.js';
 import { renderBlocks } from './blocks.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -210,6 +210,59 @@ fastify.get('/blog/rss.xml', async (req, reply) => {
   }).join('\n');
   reply.header('Content-Type', 'application/rss+xml; charset=utf-8');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n<channel>\n<title>Chris Amaya — Blog</title>\n<link>${SITE_URL}/blog</link>\n<description>Architecture, AI Systems, and Growth Engineering.</description>\n<atom:link href="${SITE_URL}/blog/rss.xml" rel="self" type="application/rss+xml"/>\n${items}\n</channel>\n</rss>`;
+});
+
+// ── pSEO Directory Routes ──────────────────────────────────
+
+// Main directory: /locations
+fastify.get('/locations', async (req, reply) => {
+  const [locations, pageData] = await Promise.all([getAllLocations(), getPageData('')]);
+  const nav = pageData?.nav || {}; const footer = pageData?.footer || {};
+  const byState = {};
+  for (const l of locations) { if (!byState[l.state]) byState[l.state] = []; byState[l.state].push(l); }
+  const stateCards = Object.entries(byState).sort().map(([state, cities]) => {
+    const links = cities.map(c => `<a href="/locations/${c.slug}" style="display:block;padding:.4rem 0;color:rgba(255,255,255,.7);font-size:.9rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00FF94'" onmouseout="this.style.color='rgba(255,255,255,.7)'">${c.city}</a>`).join('');
+    return `<div style="padding:1.25rem;border:1px solid rgba(255,255,255,.08);border-radius:.5rem"><h3 style="font-family:ui-monospace,monospace;font-size:.85rem;color:#00B8FF;text-transform:uppercase;margin-bottom:.75rem">${state}</h3>${links}</div>`;
+  }).join('');
+  const body = `<section style="background:#050505;padding:6rem 0 2rem"><div style="max-width:1400px;margin:0 auto;padding:0 1.5rem;text-align:center"><span style="display:inline-block;font-family:ui-monospace,monospace;font-size:.85rem;color:#00FF94;border:1px solid rgba(0,255,148,.3);padding:.4rem 1rem;margin-bottom:1.5rem;text-transform:uppercase">LOCATIONS</span><h1 style="font-size:2.5rem;font-weight:900;color:#fff;margin-bottom:.5rem;letter-spacing:-2px">Service Areas</h1><p style="color:rgba(255,255,255,.5);font-family:ui-monospace,monospace;margin-bottom:2rem">${locations.length} cities across the US</p></div></section><section style="background:#050505;padding:2rem 0 4rem"><div style="max-width:1400px;margin:0 auto;padding:0 1.5rem"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem">${stateCards}</div></div></section>`;
+  return reply.viewAsync('page.ejs', { title: 'Service Areas | Chris Amaya', description: 'Custom software architecture in 50+ US cities.', siteName: footer?.copyright || 'Chris Amaya', nav, footer, palette: 'emerald', blocksHtml: body, currentPath: '/locations' });
+});
+
+// Single location directory: /locations/austin-tx
+fastify.get('/locations/:slug', async (req, reply) => {
+  const { location, geo, pages } = await getLocationPages(req.params.slug);
+  if (!location) { reply.code(404); return reply.viewAsync('404.ejs', { siteName: 'Chris Amaya', currentPath: req.url, suggestions: [], nav: {}, footer: {} }); }
+  const pageData = await getPageData('');
+  const nav = pageData?.nav || {}; const footer = pageData?.footer || {};
+  const serviceCards = pages.map(p => `<a href="/${p.slug}" style="display:block;padding:1rem;border:1px solid rgba(255,255,255,.08);border-radius:.5rem;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='rgba(0,255,148,.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'"><h4 style="font-size:.95rem;font-weight:700;color:#fff;margin-bottom:.2rem">${p.service_type} ${p.sub_niche}</h4><span style="font-size:.75rem;color:rgba(255,255,255,.4);font-family:ui-monospace,monospace">/${p.slug}</span></a>`).join('');
+  const geoInfo = geo.landmark ? `<p style="color:rgba(255,255,255,.5);font-size:.9rem;margin-bottom:.5rem">Near <strong style="color:#fff">${geo.landmark}</strong>${geo.county ? ` · ${geo.county} County` : ''}</p>` : '';
+  const body = `<section style="background:#050505;padding:6rem 0 2rem"><div style="max-width:1400px;margin:0 auto;padding:0 1.5rem;text-align:center"><span style="display:inline-block;font-family:ui-monospace,monospace;font-size:.85rem;color:#00FF94;border:1px solid rgba(0,255,148,.3);padding:.4rem 1rem;margin-bottom:1.5rem;text-transform:uppercase">${location.state}</span><h1 style="font-size:2.5rem;font-weight:900;color:#fff;margin-bottom:.5rem;letter-spacing:-2px">Services in ${location.city}, ${location.state}</h1>${geoInfo}<p style="color:rgba(255,255,255,.4);font-family:ui-monospace,monospace;font-size:.85rem">${pages.length} services available</p><a href="/locations" style="display:inline-block;margin-top:1rem;font-size:.8rem;color:rgba(255,255,255,.4);font-family:ui-monospace,monospace;text-decoration:none">&larr; All Locations</a></div></section><section style="background:#050505;padding:2rem 0 4rem"><div style="max-width:1400px;margin:0 auto;padding:0 1.5rem"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.75rem">${serviceCards}</div></div></section>`;
+  return reply.viewAsync('page.ejs', { title: `Services in ${location.city}, ${location.state} | Chris Amaya`, description: `Custom software architecture in ${location.city}, ${location.state}.`, siteName: footer?.copyright || 'Chris Amaya', nav, footer, palette: 'emerald', blocksHtml: body, currentPath: `/locations/${req.params.slug}` });
+});
+
+// Main services directory: /solutions
+fastify.get('/solutions', async (req, reply) => {
+  const [services, pageData] = await Promise.all([getAllServices(), getPageData('')]);
+  const nav = pageData?.nav || {}; const footer = pageData?.footer || {};
+  const cards = services.map(s => `<a href="/solutions/${s.slug}" style="display:block;padding:1.25rem;border:1px solid rgba(255,255,255,.08);border-radius:.5rem;text-decoration:none;transition:border-color .2s,background .2s" onmouseover="this.style.borderColor='rgba(0,255,148,.3)';this.style.background='rgba(0,255,148,.02)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='transparent'"><h3 style="font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:.25rem">${s.service_type}</h3><p style="font-size:.8rem;color:rgba(255,255,255,.5);margin:0">${s.sub_niche}</p></a>`).join('');
+  const body = `<section style="background:#050505;padding:6rem 0 2rem"><div style="max-width:1400px;margin:0 auto;padding:0 1.5rem;text-align:center"><span style="display:inline-block;font-family:ui-monospace,monospace;font-size:.85rem;color:#00FF94;border:1px solid rgba(0,255,148,.3);padding:.4rem 1rem;margin-bottom:1.5rem;text-transform:uppercase">SOLUTIONS</span><h1 style="font-size:2.5rem;font-weight:900;color:#fff;margin-bottom:.5rem;letter-spacing:-2px">What I Build</h1><p style="color:rgba(255,255,255,.5);font-family:ui-monospace,monospace;margin-bottom:2rem">${services.length} service categories across 50 cities</p></div></section><section style="background:#050505;padding:2rem 0 4rem"><div style="max-width:1400px;margin:0 auto;padding:0 1.5rem"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem">${cards}</div></div></section>`;
+  return reply.viewAsync('page.ejs', { title: 'Solutions | Chris Amaya', description: '36 custom software services across 50 US cities.', siteName: footer?.copyright || 'Chris Amaya', nav, footer, palette: 'emerald', blocksHtml: body, currentPath: '/solutions' });
+});
+
+// Single service directory: /solutions/custom-saas-development
+fastify.get('/solutions/:slug', async (req, reply) => {
+  const { service, pages } = await getServicePages(req.params.slug);
+  if (!service) { reply.code(404); return reply.viewAsync('404.ejs', { siteName: 'Chris Amaya', currentPath: req.url, suggestions: [], nav: {}, footer: {} }); }
+  const pageData = await getPageData('');
+  const nav = pageData?.nav || {}; const footer = pageData?.footer || {};
+  const byState = {};
+  for (const p of pages) { if (!byState[p.state]) byState[p.state] = []; byState[p.state].push(p); }
+  const stateGroups = Object.entries(byState).sort().map(([state, cities]) => {
+    const links = cities.map(c => `<a href="/${c.slug}" style="display:block;padding:.5rem .75rem;color:rgba(255,255,255,.7);font-size:.9rem;text-decoration:none;border:1px solid rgba(255,255,255,.06);border-radius:.375rem;transition:all .2s" onmouseover="this.style.borderColor='rgba(0,255,148,.3)';this.style.color='#00FF94'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.7)'">${c.city}, ${c.state}</a>`).join('');
+    return `<div><h3 style="font-family:ui-monospace,monospace;font-size:.8rem;color:#00B8FF;text-transform:uppercase;margin-bottom:.5rem">${state}</h3><div style="display:grid;gap:.4rem">${links}</div></div>`;
+  }).join('');
+  const body = `<section style="background:#050505;padding:6rem 0 2rem"><div style="max-width:1400px;margin:0 auto;padding:0 1.5rem;text-align:center"><span style="display:inline-block;font-family:ui-monospace,monospace;font-size:.85rem;color:#00FF94;border:1px solid rgba(0,255,148,.3);padding:.4rem 1rem;margin-bottom:1.5rem;text-transform:uppercase">${service.service_type}</span><h1 style="font-size:2.5rem;font-weight:900;color:#fff;margin-bottom:.5rem;letter-spacing:-2px">${service.service_type} ${service.sub_niche}</h1><p style="color:rgba(255,255,255,.5);font-family:ui-monospace,monospace;margin-bottom:1rem">Available in ${pages.length} cities</p><a href="/solutions" style="display:inline-block;font-size:.8rem;color:rgba(255,255,255,.4);font-family:ui-monospace,monospace;text-decoration:none">&larr; All Solutions</a></div></section><section style="background:#050505;padding:2rem 0 4rem"><div style="max-width:1400px;margin:0 auto;padding:0 1.5rem"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1.5rem">${stateGroups}</div></div></section>`;
+  return reply.viewAsync('page.ejs', { title: `${service.service_type} ${service.sub_niche} | Chris Amaya`, description: `${service.service_type} ${service.sub_niche} in 50+ US cities.`, siteName: footer?.copyright || 'Chris Amaya', nav, footer, palette: 'emerald', blocksHtml: body, currentPath: `/solutions/${req.params.slug}` });
 });
 
 // Homepage with recent articles
