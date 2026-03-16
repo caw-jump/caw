@@ -148,88 +148,138 @@ cmd_insert_file() {
     return 1
   fi
   
-  echo -e "${D}Running ${1}...${R}"
-  START=$(date +%s%N 2>/dev/null || python3 -c "import time; print(int(time.time()*1000000000))")
+  LINES=$(wc -l < "$1" | tr -d ' ')
+  echo -e "${D}Running ${1} (${LINES} lines)...${R}"
+
+  # Detect existing slugs
+  SLUGS=$(grep -oE "'[a-z0-9][a-z0-9-]*[a-z0-9]'" "$1" | head -20 | tr -d "'" | sort -u)
+  EXISTING_BEFORE=""
+  for SLUG in $SLUGS; do
+    CHECK=$(run_sql "SELECT slug FROM caw_articles WHERE slug = '${SLUG}'" 2>/dev/null)
+    if [ -n "$CHECK" ]; then
+      EXISTING_BEFORE="$EXISTING_BEFORE $SLUG"
+    fi
+  done
+
+  START_S=$(python3 -c "import time; print(time.time())" 2>/dev/null || echo "0")
   OUTPUT=$(PGSSLMODE=require psql "$DB_URL" -f "$1" 2>&1)
   EXIT_CODE=$?
-  END=$(date +%s%N 2>/dev/null || python3 -c "import time; print(int(time.time()*1000000000))")
-  
-  if [ -n "$START" ] && [ -n "$END" ]; then
-    DURATION_MS=$(( (END - START) / 1000000 ))
-  else
-    DURATION_MS="?"
-  fi
+  END_S=$(python3 -c "import time; print(time.time())" 2>/dev/null || echo "0")
+  DURATION=$(python3 -c "print(f'{(${END_S} - ${START_S}):.2f}')" 2>/dev/null || echo "?")
 
   echo ""
   if [ $EXIT_CODE -ne 0 ]; then
     echo -e "${P}✗ SQL Error:${R}"
-    echo "$OUTPUT"
+    echo ""
+    echo "$OUTPUT" | head -10
+    rm -f "$TMPFILE"
     return 1
   fi
 
   INSERT_COUNT=$(echo "$OUTPUT" | grep -c "INSERT")
-  echo -e "${G}✓ Success${R} — ${INSERT_COUNT} statement(s) from ${1} in ${DURATION_MS}ms"
+  echo -e "${G}✓ Done${R} — ${INSERT_COUNT} article(s) from ${1} in ${DURATION}s"
   echo ""
 
-  SLUGS=$(cat "$1" | grep -oE "'[a-z0-9][a-z0-9-]+'" | head -10 | tr -d "'")
   for SLUG in $SLUGS; do
     ROW=$(run_sql "SELECT slug, title, status FROM caw_articles WHERE slug = '${SLUG}' LIMIT 1" 2>/dev/null)
     if [ -n "$ROW" ]; then
       TITLE=$(echo "$ROW" | cut -d'|' -f2)
-      echo -e "  ${G}●${R} ${W}${TITLE}${R}"
-      echo -e "    ${B}https://chrisamaya.work/blog/${SLUG}${R}"
+      STATUS=$(echo "$ROW" | cut -d'|' -f3)
+      if echo "$EXISTING_BEFORE" | grep -q "$SLUG"; then
+        LABEL="${P}updated${R}"
+      else
+        LABEL="${G}new${R}"
+      fi
+      echo -e "  ${G}●${R} [${LABEL}] ${W}${TITLE}${R}"
+      if [ "$STATUS" = "published" ]; then
+        echo -e "    ${B}https://chrisamaya.work/blog/${SLUG}${R}"
+      else
+        echo -e "    ${D}(status: ${STATUS} — not live yet)${R}"
+      fi
       echo ""
     fi
   done
 }
 
 cmd_insert_sql() {
-  echo -e "${W}Paste your SQL INSERT statement. Press Ctrl+D when done:${R}"
-  echo ""
-  SQL=$(cat)
+  TMPFILE=$(mktemp /tmp/caw_insert_XXXXXX.sql)
   
-  if [ -z "$SQL" ]; then
-    echo -e "${P}✗ Empty input. Nothing executed.${R}"
+  echo -e "${W}Paste your SQL below, then press ${G}Ctrl+D${W} to execute:${R}"
+  echo -e "${D}(Paste the full INSERT statement — it can be multiple lines)${R}"
+  echo ""
+
+  # Read input into temp file
+  cat > "$TMPFILE"
+  
+  # Check we got something
+  if [ ! -s "$TMPFILE" ]; then
+    echo -e "\n${P}✗ Empty input. Nothing executed.${R}"
+    rm -f "$TMPFILE"
     return 1
   fi
 
-  START=$(date +%s%N 2>/dev/null || python3 -c "import time; print(int(time.time()*1000000000))")
-  OUTPUT=$(echo "$SQL" | PGSSLMODE=require psql "$DB_URL" 2>&1)
+  LINES=$(wc -l < "$TMPFILE" | tr -d ' ')
+  echo ""
+  echo -e "${D}Received ${LINES} lines of SQL. Executing...${R}"
+
+  # Get slugs BEFORE execution to detect new vs update
+  SLUGS=$(grep -oE "'[a-z0-9][a-z0-9-]*[a-z0-9]'" "$TMPFILE" | head -20 | tr -d "'" | sort -u)
+  EXISTING_BEFORE=""
+  for SLUG in $SLUGS; do
+    CHECK=$(run_sql "SELECT slug FROM caw_articles WHERE slug = '${SLUG}'" 2>/dev/null)
+    if [ -n "$CHECK" ]; then
+      EXISTING_BEFORE="$EXISTING_BEFORE $SLUG"
+    fi
+  done
+
+  # Execute
+  START_S=$(python3 -c "import time; print(time.time())" 2>/dev/null || echo "0")
+  OUTPUT=$(PGSSLMODE=require psql "$DB_URL" -f "$TMPFILE" 2>&1)
   EXIT_CODE=$?
-  END=$(date +%s%N 2>/dev/null || python3 -c "import time; print(int(time.time()*1000000000))")
-  
-  # Calculate duration
-  if [ -n "$START" ] && [ -n "$END" ]; then
-    DURATION_MS=$(( (END - START) / 1000000 ))
-  else
-    DURATION_MS="?"
-  fi
+  END_S=$(python3 -c "import time; print(time.time())" 2>/dev/null || echo "0")
+  DURATION=$(python3 -c "print(f'{(${END_S} - ${START_S}):.2f}')" 2>/dev/null || echo "?")
 
   echo ""
+
   if [ $EXIT_CODE -ne 0 ]; then
     echo -e "${P}✗ SQL Error:${R}"
-    echo "$OUTPUT"
+    echo ""
+    echo "$OUTPUT" | head -10
+    echo ""
+    echo -e "${D}Check your SQL for syntax errors (missing quotes, unescaped apostrophes, etc.)${R}"
+    rm -f "$TMPFILE"
     return 1
   fi
 
-  # Count how many inserts/updates happened
   INSERT_COUNT=$(echo "$OUTPUT" | grep -c "INSERT")
-  
-  echo -e "${G}✓ Success${R} — ${INSERT_COUNT} statement(s) executed in ${DURATION_MS}ms"
+  echo -e "${G}✓ Done${R} — ${INSERT_COUNT} article(s) processed in ${DURATION}s"
   echo ""
 
-  # Show what was just inserted/updated
-  SLUGS=$(echo "$SQL" | grep -oE "'[a-z0-9][a-z0-9-]+'" | head -10 | tr -d "'")
+  # Show results for each article
   for SLUG in $SLUGS; do
     ROW=$(run_sql "SELECT slug, title, status FROM caw_articles WHERE slug = '${SLUG}' LIMIT 1" 2>/dev/null)
     if [ -n "$ROW" ]; then
       TITLE=$(echo "$ROW" | cut -d'|' -f2)
       STATUS=$(echo "$ROW" | cut -d'|' -f3)
-      echo -e "  ${G}●${R} ${W}${TITLE}${R}"
-      echo -e "    ${B}https://chrisamaya.work/blog/${SLUG}${R}"
+
+      # Detect if it was new or updated
+      if echo "$EXISTING_BEFORE" | grep -q "$SLUG"; then
+        LABEL="${P}updated${R}"
+      else
+        LABEL="${G}new${R}"
+      fi
+
+      echo -e "  ${G}●${R} [${LABEL}] ${W}${TITLE}${R}"
+      if [ "$STATUS" = "published" ]; then
+        echo -e "    ${B}https://chrisamaya.work/blog/${SLUG}${R}"
+      else
+        echo -e "    ${D}(status: ${STATUS} — not live yet)${R}"
+      fi
       echo ""
     fi
   done
+
+  rm -f "$TMPFILE"
 }
 
 cmd_delete() {
