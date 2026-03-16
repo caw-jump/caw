@@ -232,6 +232,21 @@ cmd_insert_sql() {
     fi
   done
 
+  # Replace NOW() with random dates between last year and today
+  python3 -c "
+import random, datetime, re, sys
+text = open('$TMPFILE').read()
+today = datetime.date.today()
+one_year_ago = today - datetime.timedelta(days=365)
+def rand_date(_):
+    days = random.randint(0, 365)
+    d = one_year_ago + datetime.timedelta(days=days)
+    h, m, s = random.randint(6,22), random.randint(0,59), random.randint(0,59)
+    return f\"'{d.isoformat()}T{h:02d}:{m:02d}:{s:02d}Z'\"
+text = re.sub(r'NOW\(\)', rand_date, text)
+open('$TMPFILE','w').write(text)
+" 2>/dev/null
+
   # Execute
   START_S=$(python3 -c "import time; print(time.time())" 2>/dev/null || echo "0")
   OUTPUT=$(PGSSLMODE=require psql "$DB_URL" -f "$TMPFILE" 2>&1)
