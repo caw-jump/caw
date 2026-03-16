@@ -58,16 +58,63 @@ cmd_list() {
 }
 
 cmd_pages() {
-  echo -e "${W}All Pages:${R}"
-  echo ""
-  run_sql_pretty "
-    SELECT
-      CASE WHEN slug = '' THEN '/' ELSE '/' || slug END AS path,
-      LEFT(title, 55) AS title,
-      jsonb_array_length(blocks) AS blocks
-    FROM caw_content
-    ORDER BY slug;
-  "
+  local FILTER="$1"
+  if [ "$FILTER" = "--auto" ]; then
+    echo -e "${W}Auto-Generated Pages:${R}"
+    echo ""
+    run_sql_pretty "
+      SELECT
+        '/' || slug AS path,
+        LEFT(title, 50) AS title,
+        jsonb_array_length(blocks) AS blocks,
+        to_char(created_at, 'YYYY-MM-DD') AS created
+      FROM caw_content
+      WHERE source = 'auto'
+      ORDER BY created_at DESC;
+    "
+    COUNT=$(run_sql "SELECT COUNT(*) FROM caw_content WHERE source = 'auto'")
+    echo -e "${D}Total auto-generated: ${COUNT}${R}"
+  elif [ "$FILTER" = "--seed" ]; then
+    echo -e "${W}Original Seeded Pages:${R}"
+    echo ""
+    run_sql_pretty "
+      SELECT
+        CASE WHEN slug = '' THEN '/' ELSE '/' || slug END AS path,
+        LEFT(title, 55) AS title,
+        jsonb_array_length(blocks) AS blocks
+      FROM caw_content
+      WHERE source = 'seed' OR source IS NULL
+      ORDER BY slug;
+    "
+  else
+    echo -e "${W}All Pages:${R}"
+    echo ""
+    run_sql_pretty "
+      SELECT
+        CASE WHEN slug = '' THEN '/' ELSE '/' || slug END AS path,
+        LEFT(title, 50) AS title,
+        jsonb_array_length(blocks) AS blocks,
+        COALESCE(source, 'seed') AS src
+      FROM caw_content
+      ORDER BY source, slug;
+    "
+    TOTAL=$(run_sql "SELECT COUNT(*) FROM caw_content")
+    AUTO=$(run_sql "SELECT COUNT(*) FROM caw_content WHERE source = 'auto'")
+    echo -e "${D}Total: ${TOTAL} pages (${AUTO} auto-generated)${R}"
+  fi
+}
+
+cmd_purge_auto() {
+  COUNT=$(run_sql "SELECT COUNT(*) FROM caw_content WHERE source = 'auto'")
+  echo -e "${W}This will delete ${COUNT} auto-generated pages from the database.${R}"
+  echo -e "${D}Original seeded pages will NOT be affected.${R}"
+  read -p "Continue? (y/N): " CONFIRM
+  if [ "$CONFIRM" = "y" ] || [ "$CONFIRM" = "Y" ]; then
+    run_sql "DELETE FROM caw_content WHERE source = 'auto'"
+    echo -e "${G}✓ Purged ${COUNT} auto-generated pages.${R}"
+  else
+    echo "Cancelled."
+  fi
 }
 
 cmd_view() {
@@ -415,6 +462,9 @@ cmd_help() {
   echo ""
   echo -e "  ${W}SITE${R}"
   echo -e "  ${G}pages${R}                   List all site pages"
+  echo -e "  ${G}pages --auto${R}            List auto-generated pages only"
+  echo -e "  ${G}pages --seed${R}            List original seeded pages only"
+  echo -e "  ${G}purge-auto${R}              Delete all auto-generated pages"
   echo -e "  ${G}health${R}                  Check site health & stats"
   echo -e "  ${G}leads${R}                   Show recent form submissions"
   echo ""
@@ -432,7 +482,8 @@ require_psql
 
 case "${1}" in
   list)         cmd_list ;;
-  pages)        cmd_pages ;;
+  pages)        cmd_pages "$2" ;;
+  purge-auto)   cmd_purge_auto ;;
   view)         cmd_view "$2" ;;
   new)          cmd_new ;;
   insert-sql)   cmd_insert_sql ;;

@@ -14,7 +14,9 @@ CREATE TABLE IF NOT EXISTS caw_content (
   palette TEXT NOT NULL DEFAULT 'emerald',
   nav JSONB,
   footer JSONB,
-  local_seo JSONB
+  local_seo JSONB,
+  source TEXT DEFAULT 'seed',
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Table 3: Blog/knowledge-base articles

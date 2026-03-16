@@ -263,6 +263,10 @@ export async function autoGeneratePage(slug) {
   const p = getPool();
   if (!p) return null;
 
+  // Block bot/scanner paths
+  const blocked = /wp-|\.php|\.env|\.xml|\.json|\.asp|\.cgi|admin|login|xmlrpc|feed\/|cgi-bin|\.well-known|favicon|robots\.txt|sitemap/i;
+  if (blocked.test(slug)) return null;
+
   const keywords = slug.replace(/[^a-z0-9]/gi, ' ').split(/\s+/).filter((w) => w.length > 2);
   if (keywords.length === 0) return null;
 
@@ -377,10 +381,10 @@ export async function autoGeneratePage(slug) {
       else blocks.push(relBlock);
     }
 
-    // Save to database permanently
+    // Save to database permanently with source tracking
     await p.query(
-      `INSERT INTO caw_content (slug, title, blocks, palette, nav, footer)
-       VALUES ($1, $2, $3::jsonb, $4, $5::jsonb, $6::jsonb)
+      `INSERT INTO caw_content (slug, title, blocks, palette, nav, footer, source, created_at)
+       VALUES ($1, $2, $3::jsonb, $4, $5::jsonb, $6::jsonb, 'auto', NOW())
        ON CONFLICT (slug) DO NOTHING`,
       [slug, title, JSON.stringify(blocks), palette, JSON.stringify(nav), JSON.stringify(footer)]
     );
