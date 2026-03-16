@@ -27,6 +27,7 @@ Standard commands are in `README.md` and `package.json` scripts. Key sequence:
   docker exec workspace-postgres-1 psql -U caw -d chrisamaya -c "CREATE TABLE IF NOT EXISTS leads (id SERIAL PRIMARY KEY, source TEXT, name TEXT, email TEXT, phone TEXT, website TEXT, revenue TEXT, budget TEXT, problem TEXT, form_type TEXT, data_json JSONB, created_at TIMESTAMPTZ DEFAULT NOW());"
   ```
 - `db.js` disables SSL cert verification for local connections containing `127.0.0.1` — this is by design.
+- When connecting to the remote Coolify-hosted Postgres, always set `NODE_TLS_REJECT_UNAUTHORIZED=0` in the environment.
 - Many dependencies in `package.json` (Astro, React, Three.js, etc.) are legacy from an abandoned frontend in `trash/`. Only `fastify`, `@fastify/view`, `@fastify/static`, `ejs`, and `pg` are used by the active SSR server.
 - `npm run dev` uses `node --watch` for hot reload. Restarting the process is needed after installing new deps.
 - There is no lint or test configuration in this project. No ESLint, no test framework.
