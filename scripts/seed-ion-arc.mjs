@@ -195,12 +195,16 @@ async function run() {
   // For Coolify/internal Postgres, we want to skip verification (same approach as server/db.js).
   const sslmodeMatch = DATABASE_URL.match(/(?:\?|&)sslmode=([^&]+)/i);
   const sslmode = (sslmodeMatch?.[1] || '').toLowerCase();
+  const wantsTlsOff = sslmode === 'disable' || sslmode === 'disabled';
 
-  // If sslmode isn't set (or is prefer/require/verify-ca/verify-full), skip cert verification.
-  // Only disable TLS if explicitly told to disable SSL.
-  const ssl = (sslmode === 'disable' || sslmode === 'disabled') ? false : { rejectUnauthorized: false };
+  // Some pg/db drivers interpret connection-string `sslmode` in ways that override `ssl.rejectUnauthorized`.
+  // To make seeding reliable in Coolify, rewrite all TLS verify modes to `no-verify` (unless TLS is disabled).
+  const seedUrl = wantsTlsOff
+    ? DATABASE_URL
+    : DATABASE_URL.replace(/([?&])sslmode=[^&]+/i, '$1sslmode=no-verify');
 
-  const pool = new Pool({ connectionString: DATABASE_URL, ssl });
+  const ssl = wantsTlsOff ? false : { rejectUnauthorized: false };
+  const pool = new Pool({ connectionString: seedUrl, ssl });
   const client = await pool.connect();
 
   try {

@@ -7,7 +7,9 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
   <title><%= title === siteName ? title : title + ' | ' + siteName %></title>
   <meta name="description" content="<%= description || 'Stop hiring freelancers. Start building an empire.' %>"/>
-  <% const canonicalHref = canonical || (siteUrl + (currentPath === '/' ? '' : currentPath)); %>
+  <% const canonicalHref = (typeof canonical !== 'undefined' && canonical)
+    ? canonical
+    : (siteUrl + (currentPath === '/' ? '' : currentPath)); %>
   <link rel="canonical" href="<%= canonicalHref %>"/>
   <% if (jsonLd) { %>
   <script type="application/ld+json"><%- JSON.stringify(jsonLd) %></script>
