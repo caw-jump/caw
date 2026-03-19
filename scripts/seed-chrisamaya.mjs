@@ -95,10 +95,17 @@ async function runSeed() {
     process.exit(1);
   }
 
-  const ssl = url.includes('sslmode=require') || url.includes('sslmode=verify')
-    ? { rejectUnauthorized: false }
-    : false;
-  const pool = new Pool({ connectionString: url, ssl });
+  // Coolify/internal Postgres may use sslmode=prefer/require/verify-ca which can trigger verify-full semantics.
+  // Rewrite to no-verify for seeding to be reliable, then set rejectUnauthorized=false.
+  const sslmodeMatch = url.match(/(?:\?|&)sslmode=([^&]+)/i);
+  const sslmode = (sslmodeMatch?.[1] || '').toLowerCase();
+  const wantsTlsOff = sslmode === 'disable' || sslmode === 'disabled';
+  const seedUrl = wantsTlsOff
+    ? url
+    : url.replace(/([?&])sslmode=[^&]+/i, '$1sslmode=no-verify');
+
+  const ssl = wantsTlsOff ? false : { rejectUnauthorized: false };
+  const pool = new Pool({ connectionString: seedUrl, ssl });
   const client = await pool.connect();
 
   try {
