@@ -190,9 +190,16 @@ function articleHtml({ intro, sections }) {
 }
 
 async function run() {
-  const ssl = DATABASE_URL.includes('sslmode=require') || DATABASE_URL.includes('sslmode=no-verify')
-    ? { rejectUnauthorized: false }
-    : false;
+  // pg's SSL mode parsing treats `prefer/require/verify-ca` as aliases for `verify-full`
+  // and will fail if the server certificate chain isn't trusted in this container.
+  // For Coolify/internal Postgres, we want to skip verification (same approach as server/db.js).
+  const sslmodeMatch = DATABASE_URL.match(/(?:\?|&)sslmode=([^&]+)/i);
+  const sslmode = (sslmodeMatch?.[1] || '').toLowerCase();
+
+  // If sslmode isn't set, default to "skip cert verification" for non-local connections.
+  const ssl = sslmode
+    ? (sslmode === 'disable' || sslmode === 'disabled' ? false : { rejectUnauthorized: false })
+    : (!DATABASE_URL.includes('127.0.0.1') ? { rejectUnauthorized: false } : false);
 
   const pool = new Pool({ connectionString: DATABASE_URL, ssl });
   const client = await pool.connect();
