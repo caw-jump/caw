@@ -5,11 +5,22 @@ let pool = null;
 export function getPool() {
   if (!process.env.DATABASE_URL) return null;
   if (!pool) {
-    const url = process.env.DATABASE_URL;
+    let url = process.env.DATABASE_URL;
+    const sslmodeMatch = url.match(/(?:\?|&)sslmode=([^&]+)/i);
+    const sslmode = (sslmodeMatch?.[1] || '').toLowerCase();
+
+    // pg/libpq can treat `prefer/require/verify-ca` as verify-full regardless of our TLS options.
+    // Rewrite to `no-verify` for Coolify/internal Postgres so runtime + seed both work.
+    if (sslmodeMatch && sslmode !== 'disable' && sslmode !== 'disabled' && sslmode !== 'no-verify' && sslmode !== 'no_verify') {
+      url = url.replace(/([?&])sslmode=[^&]+/i, '$1sslmode=no-verify');
+    } else if (!url.includes('127.0.0.1')) {
+      // If sslmode isn't present but we're not local, still skip cert verification.
+      // (Matches earlier behavior, but now works reliably with libpq sslmode semantics.)
+      // Note: we do NOT rewrite sslmode here.
+    }
+
     // Cloud/Coolify Postgres: skip cert verify for TLS connections
-    const ssl = url.includes('sslmode=require') || url.includes('sslmode=no-verify') || !url.includes('127.0.0.1')
-      ? { rejectUnauthorized: false }
-      : false;
+    const ssl = !url.includes('127.0.0.1') ? { rejectUnauthorized: false } : false;
     pool = new pg.Pool({ connectionString: url, ssl });
   }
   return pool;
