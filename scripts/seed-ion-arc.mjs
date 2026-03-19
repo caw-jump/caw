@@ -196,10 +196,9 @@ async function run() {
   const sslmodeMatch = DATABASE_URL.match(/(?:\?|&)sslmode=([^&]+)/i);
   const sslmode = (sslmodeMatch?.[1] || '').toLowerCase();
 
-  // If sslmode isn't set, default to "skip cert verification" for non-local connections.
-  const ssl = sslmode
-    ? (sslmode === 'disable' || sslmode === 'disabled' ? false : { rejectUnauthorized: false })
-    : (!DATABASE_URL.includes('127.0.0.1') ? { rejectUnauthorized: false } : false);
+  // If sslmode isn't set (or is prefer/require/verify-ca/verify-full), skip cert verification.
+  // Only disable TLS if explicitly told to disable SSL.
+  const ssl = (sslmode === 'disable' || sslmode === 'disabled') ? false : { rejectUnauthorized: false };
 
   const pool = new Pool({ connectionString: DATABASE_URL, ssl });
   const client = await pool.connect();
