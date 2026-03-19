@@ -10,13 +10,20 @@
     "preview": "astro preview",
     "astro": "astro",
     "db:up": "docker compose up -d postgres",
-    "db:seed": "node scripts/seed-chrisamaya.mjs"
+    "db:seed": "node scripts/seed-chrisamaya.mjs",
+    "db:seed-missing": "node scripts/seed-missing-pages.mjs",
+    "db:seed-ion-arc": "node scripts/seed-ion-arc.mjs",
+    "db:seed-ion-arc-biz": "SITE_KEY=ion_arc_biz node scripts/seed-ion-arc.mjs",
+    "db:seed-ion-arc-online": "SITE_KEY=ion_arc_online node scripts/seed-ion-arc.mjs",
+    "db:list": "node scripts/db-query.mjs list",
+    "db:show": "node scripts/db-query.mjs show",
+    "db:sql": "node scripts/db-query.mjs sql"
   },
   "dependencies": {
     "@fastify/static": "^9.0.0",
     "@fastify/view": "^10.0.1",
     "ejs": "^3.1.10",
-    "fastify": "^5.1.0",
+    "fastify": "^5.8.1",
     "pg": "^8.13.1",
     "@astrojs/check": "^0.9.6",
     "@astrojs/mdx": "^4.3.13",

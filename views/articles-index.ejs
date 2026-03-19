@@ -1,0 +1,39 @@
+<%
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const articlesSafe = Array.isArray(articles) ? articles : [];
+
+  const cardsHtml = articlesSafe.map((a) => {
+    const slug = esc(a.slug);
+    const titleText = esc(a.title || a.slug);
+    const desc = esc(a.meta_description || a.excerpt || '');
+    const category = a.category ? `<span style="display:inline-block;background:rgba(0,255,148,0.12);border:1px solid rgba(0,255,148,0.35);color:#00FF94;padding:2px 8px;border-radius:999px;font-size:12px;margin-right:8px;">${esc(a.category)}</span>` : '';
+    const tags = Array.isArray(a.tags) ? a.tags.slice(0, 3) : [];
+    const tagsHtml = tags.map((t) => `<span style="display:inline-block;background:rgba(0,255,148,0.08);border:1px solid rgba(0,255,148,0.25);color:#00FF94;padding:2px 8px;border-radius:999px;font-size:12px;margin-right:6px;margin-top:6px;">${esc(t)}</span>`).join('');
+    const dateStr = a.date_created ? new Date(a.date_created).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+
+    return `
+      <li style="border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:18px;background:#0F0F0F;">
+        <a href="/articles/${slug}" style="text-decoration:none;color:inherit;display:block;">
+          <h2 style="font-size:18px;font-weight:800;color:#fff;margin:0 0 8px;line-height:1.3;">${titleText}</h2>
+          ${desc ? `<p style="color:rgba(255,255,255,0.7);margin:0 0 12px;line-height:1.5;">${desc}</p>` : ''}
+          <div style="display:flex;flex-wrap:wrap;gap:0;align-items:center;margin-bottom:10px;">
+            ${category}
+            <span style="color:rgba(255,255,255,0.55);font-size:13px;font-family:ui-monospace,monospace;">${esc(dateStr)}</span>
+          </div>
+          ${tagsHtml ? `<div style="display:flex;flex-wrap:wrap;">${tagsHtml}</div>` : ''}
+        </a>
+      </li>
+    `;
+  }).join('');
+
+  const bodyHtml = `
+    <div style="max-width:1200px;margin:0 auto;padding:28px 16px 40px;">
+      <h1 style="color:#fff;font-size:32px;font-weight:900;margin:0 0 8px;">Articles</h1>
+      <p style="color:rgba(255,255,255,0.7);margin:0 0 26px;">SEO-safe articles listing.</p>
+      ${articlesSafe.length === 0 ? `<p style="color:rgba(255,255,255,0.6);">No articles yet.</p>` : `<ul style="list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">${cardsHtml}</ul>`}
+    </div>
+  `;
+%>
+
+<%- include('layout', { body: bodyHtml, title, description, siteName, nav, footer, palette, currentPath, canonical, jsonLd }) %>
+

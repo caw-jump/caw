@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "DATABASE_URL": "postgresql://READONLY_USER:READONLY_PASSWORD@localhost:5432/postgres?sslmode=require"
+      }
+    }
+  }
+}
+

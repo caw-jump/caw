@@ -7,7 +7,11 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
   <title><%= title === siteName ? title : title + ' | ' + siteName %></title>
   <meta name="description" content="<%= description || 'Stop hiring freelancers. Start building an empire.' %>"/>
-  <link rel="canonical" href="<%= siteUrl %><%= currentPath === '/' ? '' : currentPath %>"/>
+  <% const canonicalHref = canonical || (siteUrl + (currentPath === '/' ? '' : currentPath)); %>
+  <link rel="canonical" href="<%= canonicalHref %>"/>
+  <% if (jsonLd) { %>
+  <script type="application/ld+json"><%- JSON.stringify(jsonLd) %></script>
+  <% } %>
   <style>
     :root{--bg-deep:#0B0B0F;--neon-green:#00FF94;--neon-blue:#00B8FF;--neon-pink:#FF00FF;--accent:#E8C677;--gradient-accent:linear-gradient(135deg,#FFE5A0,#E8C677)}
     *{box-sizing:border-box;margin:0;padding:0}

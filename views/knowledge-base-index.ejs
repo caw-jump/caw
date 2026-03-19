@@ -1,0 +1,94 @@
+<%
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const articlesSafe = Array.isArray(articles) ? articles : [];
+  const categoriesSafe = Array.isArray(categories) ? categories : [];
+  const tagsSafe = Array.isArray(tags) ? tags : [];
+
+  const formatDate = (d) => {
+    try {
+      if (!d) return '';
+      return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return '';
+    }
+  };
+
+  const cardsHtml = articlesSafe.map((a) => {
+    const dateStr = formatDate(a.date_created);
+    const titleText = esc(a.title || a.slug);
+    const desc = esc(a.meta_description || a.excerpt || '');
+    const category = a.category
+      ? `<span style="display:inline-block;background:rgba(0,255,148,0.12);border:1px solid rgba(0,255,148,0.35);color:#00FF94;padding:2px 8px;border-radius:999px;font-size:12px;margin-right:8px;">${esc(a.category)}</span>`
+      : '';
+    const tagPills = (Array.isArray(a.tags) ? a.tags : []).slice(0, 3)
+      .map((t) => `<span style="display:inline-block;background:rgba(0,255,148,0.08);border:1px solid rgba(0,255,148,0.25);color:#00FF94;padding:2px 8px;border-radius:999px;font-size:12px;margin-right:6px;margin-top:6px;">${esc(t)}</span>`)
+      .join('');
+
+    return `
+      <li style="border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:18px;background:#0F0F0F;">
+        <a href="/articles/${esc(a.slug)}" style="text-decoration:none;color:inherit;display:block;">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;">
+            <span style="color:rgba(255,255,255,0.55);font-size:13px;font-family:ui-monospace,monospace;">${esc(dateStr)}</span>
+            ${category}
+          </div>
+          <h2 style="font-size:18px;font-weight:900;color:#fff;margin:0 0 8px;line-height:1.3;">${titleText}</h2>
+          ${desc ? `<p style="color:rgba(255,255,255,0.7);margin:0 0 12px;line-height:1.5;">${desc}</p>` : ''}
+          ${tagPills ? `<div style="display:flex;flex-wrap:wrap;">${tagPills}</div>` : ''}
+        </a>
+      </li>
+    `;
+  }).join('');
+
+  const categoriesHtml = categoriesSafe.length
+    ? `
+      <div>
+        <h3 style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.8);font-weight:900;margin:0 0 10px;">Categories</h3>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;">
+          <li><a href="/knowledge-base" style="color:rgba(255,255,255,0.6);text-decoration:none;">All</a></li>
+          ${categoriesSafe.map((c) => `<li><a href="/knowledge-base/category/${encodeURIComponent(c)}" style="color:rgba(255,255,255,0.6);text-decoration:none;">${esc(c)}</a></li>`).join('')}
+        </ul>
+      </div>
+    `
+    : '';
+
+  const tagsHtml = tagsSafe.length
+    ? `
+      <div>
+        <h3 style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.8);font-weight:900;margin:16px 0 10px;">Tags</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${tagsSafe.slice(0, 20).map((t) => `<a href="/knowledge-base" style="text-decoration:none;"><span style="display:inline-block;background:rgba(0,255,148,0.15);border:1px solid rgba(0,255,148,0.3);color:#00FF94;padding:6px 10px;border-radius:999px;font-size:12px;">${esc(t)}</span></a>`).join('')}
+        </div>
+      </div>
+    `
+    : '';
+
+  const asideHtml = (categoriesSafe.length || tagsSafe.length)
+    ? `
+      <aside style="width:280px;flex-shrink:0;">
+        <div style="position:sticky;top:120px;">
+          ${categoriesHtml}
+          ${tagsHtml}
+        </div>
+      </aside>
+    `
+    : '';
+
+  const bodyHtml = `
+    <div style="max-width:1200px;margin:0 auto;padding:28px 16px 40px;">
+      <h1 style="color:#fff;font-size:32px;font-weight:900;margin:0 0 10px;">Knowledge Base</h1>
+      <p style="color:rgba(255,255,255,0.7);margin:0 0 24px;">Articles, insights, and guides.</p>
+      <div style="display:flex;gap:28px;align-items:flex-start;">
+        ${asideHtml}
+        <main style="flex:1;min-width:0;">
+          ${articlesSafe.length === 0
+            ? `<p style="color:rgba(255,255,255,0.6);">No articles yet.</p>`
+            : `<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">${cardsHtml}</ul>`
+          }
+        </main>
+      </div>
+    </div>
+  `;
+%>
+
+<%- include('layout', { body: bodyHtml, title, description, siteName, nav, footer, palette, currentPath, canonical, jsonLd }) %>
+

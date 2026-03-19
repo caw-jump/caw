@@ -1,0 +1,80 @@
+<%
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const slugify = (text) => String(text ?? '')
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+
+  const a = article || {};
+  const sectionsSafe = Array.isArray(sections) ? sections : [];
+  const tocSafe = Array.isArray(tocHeadings) ? tocHeadings : [];
+  const breadcrumbsSafe = Array.isArray(breadcrumbs) ? breadcrumbs : [];
+
+  const breadcrumbsHtml = breadcrumbsSafe.length > 0
+    ? breadcrumbsSafe.map((c, i) => {
+        const sep = i < breadcrumbsSafe.length - 1 ? `<span style="color:rgba(255,255,255,0.35);margin:0 10px;">/</span>` : '';
+        return `<span>${i === breadcrumbsSafe.length - 1 ? `<span style="color:rgba(255,255,255,0.9);">${esc(c.name)}</span>` : `<a href="${esc(c.url)}" style="color:#00FF94;text-decoration:underline;">${esc(c.name)}</a>`}${sep}</span>`;
+      }).join('')
+    : '';
+
+  const tocHtml = hasToc
+    ? `
+      <aside style="width:280px;flex-shrink:0;position:sticky;top:120px;">
+        <div style="border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;background:#08080A;">
+          <h3 style="font-size:14px;font-weight:900;color:rgba(255,255,255,0.85);margin:0 0 12px;">On this page</h3>
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;">
+            ${tocSafe.map((h) => `<li><a href="#${slugify(h)}" style="color:rgba(255,255,255,0.65);text-decoration:none;">${esc(h)}</a></li>`).join('')}
+          </ul>
+        </div>
+      </aside>
+    `
+    : '';
+
+  const sectionsHtml = sectionsSafe.map((s) => {
+    const isLight = String(s.class || '').includes('light');
+    const bg = isLight ? '#0B0B0F' : '#08080A';
+    return `
+      <section style="background:${bg};padding:26px 0;">
+        <div style="max-width:860px;margin:0 auto;padding:0 16px;">
+          <div class="prose" style="color:#fff;line-height:1.75;">
+            ${s.html || ''}
+          </div>
+        </div>
+      </section>
+    `;
+  }).join('');
+
+  const categoryPill = a.category
+    ? `<span style="display:inline-block;background:rgba(0,255,148,0.12);border:1px solid rgba(0,255,148,0.35);color:#00FF94;padding:6px 12px;border-radius:999px;font-size:13px;margin-left:10px;">${esc(a.category)}</span>`
+    : '';
+
+  const dateStr = a.date_created
+    ? new Date(a.date_created).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+    : '';
+
+  const bodyHtml = `
+    <div style="max-width:1200px;margin:0 auto;padding:24px 16px 40px;">
+      <div style="display:flex;gap:28px;align-items:flex-start;">
+        <div style="flex:1;min-width:0;">
+          <div style="color:rgba(255,255,255,0.65);font-family:ui-monospace,monospace;font-size:13px;margin-bottom:14px;">
+            ${breadcrumbsHtml}
+          </div>
+          <h1 style="color:#fff;font-size:34px;font-weight:900;margin:0 0 10px;line-height:1.2;">${esc(a.title || a.slug)}</h1>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:20px;color:rgba(255,255,255,0.6);font-family:ui-monospace,monospace;font-size:13px;">
+            ${dateStr ? `<span>${esc(dateStr)}</span>` : ''}
+            <span>${esc(readTime)} min read</span>
+            ${categoryPill}
+          </div>
+          ${sectionsHtml}
+          <div style="margin-top:12px;">
+            ${auditFormHtml || ''}
+          </div>
+        </div>
+        ${tocHtml}
+      </div>
+    </div>
+  `;
+%>
+
+<%- include('layout', { body: bodyHtml, title, description, siteName, nav, footer, palette, currentPath, canonical, jsonLd }) %>
+

@@ -1,0 +1,180 @@
+{
+  "content": [
+    {
+      "id": "prod-hero-section",
+      "settings": {
+        "background_background": "classic",
+        "background_color": "#001DC2",
+        "background_color_b": "#02010F",
+        "background_image": {
+          "url": "https://dev.rental.software/bouncehouseoftampa.com431/wp-content/uploads/2026/03/0ee62864-c1ee-41f4-aa69-9c6a25b58858-scaled.jpg",
+          "id": 6851,
+          "size": "",
+          "alt": "",
+          "source": "library"
+        },
+        "background_motion_fx_motion_fx_scrolling": "yes",
+        "__globals__": {"background_color": "", "background_color_b": ""}
+      },
+      "elements": [
+        {
+          "id": "prod-hero-col",
+          "settings": {
+            "_column_size": 100,
+            "_inline_size": null,
+            "align": "center",
+            "html_tag": "section"
+          },
+          "elements": [
+            {
+              "id": "prod-badge",
+              "settings": {
+                "html": "<center><span class=\"badge rounded-pill bg-warning text-dark mb-3 px-4 py-2 fw-bold text-uppercase tracking-wider shadow-sm\">\ud83c\udf89 Product</span></center>",
+                "_element_width": "inherit",
+                "_element_vertical_align": "center"
+              },
+              "elements": [],
+              "isInner": false,
+              "widgetType": "html",
+              "elType": "widget"
+            },
+            {
+              "id": "prod-title-widget",
+              "settings": {
+                "__dynamic__": {
+                  "product_title": "[elementor-tag id=\"\" name=\"woocommerce-product-title\" settings=\"%7B%7D\"]"
+                },
+                "title": "Product Title",
+                "align": "center",
+                "typography_typography": "custom",
+                "typography_font_family": "Roboto",
+                "typography_font_weight": "600",
+                "title_color": "#FFFFFF"
+              },
+              "elements": [],
+              "isInner": false,
+              "widgetType": "woocommerce-product-title",
+              "elType": "widget"
+            },
+            {
+              "id": "prod-price-widget",
+              "settings": {
+                "align": "center",
+                "price_color": "#FFFFFF",
+                "typography_typography": "custom",
+                "typography_font_family": "Roboto",
+                "typography_font_weight": "600"
+              },
+              "elements": [],
+              "isInner": false,
+              "widgetType": "woocommerce-product-price",
+              "elType": "widget"
+            },
+            {
+              "id": "prod-excerpt-widget",
+              "settings": {
+                "align": "center",
+                "product_excerpt_color": "#FFFFFF"
+              },
+              "elements": [],
+              "isInner": false,
+              "widgetType": "woocommerce-product-excerpt",
+              "elType": "widget"
+            },
+            {
+              "id": "prod-add-to-cart-hero",
+              "settings": {
+                "align": "center",
+                "layout": "auto"
+              },
+              "elements": [],
+              "isInner": false,
+              "widgetType": "woocommerce-product-add-to-cart",
+              "elType": "widget"
+            }
+          ],
+          "isInner": false,
+          "elType": "column"
+        }
+      ],
+      "isInner": false,
+      "elType": "section"
+    },
+    {
+      "id": "prod-gallery-desc-wrap",
+      "settings": {
+        "layout": "full_width",
+        "margin": {"unit": "px", "top": "0", "right": "0", "bottom": "0", "left": "0", "isLinked": false},
+        "padding": {"unit": "px", "top": "24", "right": "0", "bottom": "24", "left": "0", "isLinked": false}
+      },
+      "elements": [
+        {
+          "id": "prod-gallery-col",
+          "settings": {"_column_size": 50, "_inline_size": 50},
+          "elements": [
+            {
+              "id": "prod-gallery",
+              "settings": {},
+              "elements": [],
+              "isInner": false,
+              "widgetType": "woocommerce-product-images",
+              "elType": "widget"
+            }
+          ],
+          "isInner": false,
+          "elType": "column"
+        },
+        {
+          "id": "prod-desc-col",
+          "settings": {"_column_size": 50, "_inline_size": 50},
+          "elements": [
+            {
+              "id": "prod-content",
+              "settings": {},
+              "elements": [],
+              "isInner": false,
+              "widgetType": "woocommerce-product-content",
+              "elType": "widget"
+            },
+            {
+              "id": "prod-meta",
+              "settings": {},
+              "elements": [],
+              "isInner": false,
+              "widgetType": "woocommerce-product-meta",
+              "elType": "widget"
+            },
+            {
+              "id": "prod-data-tabs",
+              "settings": {},
+              "elements": [],
+              "isInner": false,
+              "widgetType": "woocommerce-product-data-tabs",
+              "elType": "widget"
+            }
+          ],
+          "isInner": false,
+          "elType": "column"
+        }
+      ],
+      "isInner": false,
+      "elType": "section"
+    }
+  ],
+  "page_settings": {
+    "hide_title": "yes",
+    "custom_css": "\n.text-gradient {\n    background: linear-gradient(90deg, #FFD200, #F58220);\n    -webkit-background-clip: text;\n    -webkit-text-fill-color: transparent;\n}\n"
+  },
+  "version": "0.4",
+  "title": "Single Product – Hero + gallery & description",
+  "type": "single",
+  "document": {
+    "settings": {
+      "template": "default",
+      "page_layout": "elementor_canvas"
+    },
+    "conditions": [
+      {"type": "singular", "name": "product", "sub": "", "sub_id": ""}
+    ]
+  }
+}

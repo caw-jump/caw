@@ -1,0 +1,146 @@
+{
+  "content": [
+    {
+      "id": "5c6aa3b6",
+      "settings": {
+        "background_background": "classic",
+        "background_color": "#001DC2",
+        "background_color_b": "#02010F",
+        "background_image": {
+          "url": "https://dev.rental.software/bouncehouseoftampa.com431/wp-content/uploads/2026/03/0ee62864-c1ee-41f4-aa69-9c6a25b58858-scaled.jpg",
+          "id": 6851,
+          "size": "",
+          "alt": "",
+          "source": "library"
+        },
+        "background_motion_fx_motion_fx_scrolling": "yes",
+        "__globals__": {"background_color": "", "background_color_b": ""}
+      },
+      "elements": [
+        {
+          "id": "3e199c55",
+          "settings": {
+            "_column_size": 100,
+            "_inline_size": null,
+            "align": "center",
+            "html_tag": "section"
+          },
+          "elements": [
+            {
+              "id": "38010971",
+              "settings": {
+                "html": "<center>      <span class=\"badge rounded-pill bg-warning text-dark mb-3 px-4 py-2 fw-bold text-uppercase tracking-wider shadow-sm\">\n            \ud83c\udf89 Tampa Bay's #1 Party Rental Company\n        </span>\n</center>",
+                "_element_width": "inherit",
+                "_element_vertical_align": "center"
+              },
+              "elements": [],
+              "isInner": false,
+              "widgetType": "html",
+              "elType": "widget"
+            },
+            {
+              "id": "479c5984",
+              "settings": {
+                "__dynamic__": {
+                  "title": "[elementor-tag id=\"\" name=\"page-title\" settings=\"%7B%22include_context%22%3A%22%22%2C%22show_home_title%22%3A%22%22%2C%22before%22%3A%22%22%2C%22after%22%3A%22%22%2C%22fallback%22%3A%22%22%7D\"]"
+                },
+                "title": "Add Your Heading Text Here",
+                "align": "center",
+                "typography_typography": "custom",
+                "typography_font_family": "Roboto",
+                "typography_font_weight": "600",
+                "title_color": "#FFFFFF"
+              },
+              "elements": [],
+              "isInner": false,
+              "widgetType": "theme-page-title",
+              "elType": "widget"
+            },
+            {
+              "id": "7872e4e5",
+              "settings": {
+                "html": "   <span class=\"text-gradient\">Tampa Bay's #1 Party Rentals Company</span>"
+              },
+              "elements": [],
+              "isInner": false,
+              "widgetType": "html",
+              "elType": "widget"
+            },
+            {
+              "id": "52a9bac7",
+              "settings": {
+                "__dynamic__": {
+                  "excerpt": "[elementor-tag id=\"\" name=\"post-excerpt\" settings=\"%7B%22max_length%22%3A%22%22%2C%22apply_to_post_content%22%3A%22no%22%2C%22before%22%3A%22%22%2C%22after%22%3A%22%22%2C%22fallback%22%3A%22%22%7D\"]"
+                },
+                "align": "center",
+                "title_color": "#FFFFFF"
+              },
+              "elements": [],
+              "isInner": false,
+              "widgetType": "theme-post-excerpt",
+              "elType": "widget"
+            },
+            {
+              "id": "4057841a",
+              "settings": {
+                "html": "<section class=\"bht-hp-hero d-flex align-items-center justify-content-center text-center py-5\">\n    <div class=\"container position-relative z-2\">\n      <div class=\"d-flex flex-wrap justify-content-center gap-3\">\n            <a class=\"btn btn-lg btn-primary rounded-pill px-5 py-3 fw-bold shadow-lg border-0 bht-btn-primary\" href=\"#whychooseus\">\ud83c\udf88 Find Out Why Tampa Loves Us</a>\n            <a class=\"btn btn-lg btn-outline-light rounded-pill px-5 py-3 fw-bold bht-btn-secondary\" href=\"/bouncehouseoftampa.com431/contact-us/\">Get a Free Quote</a>\n        </div>\n    </div>\n</section>"
+              },
+              "elements": [],
+              "isInner": false,
+              "widgetType": "html",
+              "elType": "widget"
+            }
+          ],
+          "isInner": false,
+          "elType": "column"
+        }
+      ],
+      "isInner": false,
+      "elType": "section"
+    },
+    {
+      "id": "page-content-wrap",
+      "settings": {
+        "layout": "full_width",
+        "margin": {"unit": "px", "top": "0", "right": "0", "bottom": "0", "left": "0", "isLinked": false},
+        "padding": {"unit": "px", "top": "24", "right": "0", "bottom": "24", "left": "0", "isLinked": false}
+      },
+      "elements": [
+        {
+          "id": "page-content-col",
+          "settings": {"_column_size": 100, "_inline_size": null},
+          "elements": [
+            {
+              "id": "theme-post-content",
+              "settings": {},
+              "elements": [],
+              "isInner": false,
+              "widgetType": "theme-post-content",
+              "elType": "widget"
+            }
+          ],
+          "isInner": false,
+          "elType": "column"
+        }
+      ],
+      "isInner": false,
+      "elType": "section"
+    }
+  ],
+  "page_settings": {
+    "hide_title": "yes",
+    "custom_css": "\n/* Gradient Text for the 'Expert' look */\n.text-gradient {\n    background: linear-gradient(90deg, #FFD200, #F58220);\n    -webkit-background-clip: text;\n    -webkit-text-fill-color: transparent;\n}\n\n.text-shadow {\n    text-shadow: 0 2px 20px rgba(0,0,0,0.4);\n}\n\n.bht-cat-card {\n    transition: all 0.3s ease;\n    background: linear-gradient(160deg, #FFF8F0 0%, #FFF 100%);\n    border-bottom: 4px solid #F58220 !important;\n}\n\n.bht-cat-card:hover {\n    transform: translateY(-8px);\n    box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;\n    background: #fff;\n}\n .bht-hp-hero-content {\n    background: rgba(255, 255, 255, 0.2);\n    backdrop-filter: blur(10px);\n    padding: 40px;\n    border-radius: 30px;\n    border: 1px solid rgba(255, 255, 255, 0.3);\n}\n"
+  },
+  "version": "0.4",
+  "title": "Single Page – Hero + content",
+  "type": "single",
+  "document": {
+    "settings": {
+      "template": "default",
+      "page_layout": "elementor_canvas"
+    },
+    "conditions": [
+      {"type": "singular", "name": "page", "sub": "", "sub_id": ""}
+    ]
+  }
+}

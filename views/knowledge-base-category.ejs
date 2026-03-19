@@ -1,0 +1,58 @@
+<%
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const articlesSafe = Array.isArray(articles) ? articles : [];
+  const categorySafe = String(category ?? '');
+
+  const formatDate = (d) => {
+    try {
+      if (!d) return '';
+      return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return '';
+    }
+  };
+
+  const cardsHtml = articlesSafe.map((a) => {
+    const dateStr = formatDate(a.date_created);
+    const titleText = esc(a.title || a.slug);
+    const desc = esc(a.meta_description || a.excerpt || '');
+    const categoryPill = a.category
+      ? `<span style="display:inline-block;background:rgba(0,255,148,0.12);border:1px solid rgba(0,255,148,0.35);color:#00FF94;padding:2px 8px;border-radius:999px;font-size:12px;margin-right:8px;">${esc(a.category)}</span>`
+      : '';
+    const tagPills = (Array.isArray(a.tags) ? a.tags : []).slice(0, 3)
+      .map((t) => `<span style="display:inline-block;background:rgba(0,255,148,0.08);border:1px solid rgba(0,255,148,0.25);color:#00FF94;padding:2px 8px;border-radius:999px;font-size:12px;margin-right:6px;margin-top:6px;">${esc(t)}</span>`)
+      .join('');
+
+    return `
+      <li style="border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:18px;background:#0F0F0F;">
+        <a href="/articles/${esc(a.slug)}" style="text-decoration:none;color:inherit;display:block;">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;">
+            <span style="color:rgba(255,255,255,0.55);font-size:13px;font-family:ui-monospace,monospace;">${esc(dateStr)}</span>
+            ${categoryPill}
+          </div>
+          <h2 style="font-size:18px;font-weight:900;color:#fff;margin:0 0 8px;line-height:1.3;">${titleText}</h2>
+          ${desc ? `<p style="color:rgba(255,255,255,0.7);margin:0 0 12px;line-height:1.5;">${desc}</p>` : ''}
+          ${tagPills ? `<div style="display:flex;flex-wrap:wrap;">${tagPills}</div>` : ''}
+        </a>
+      </li>
+    `;
+  }).join('');
+
+  const bodyHtml = `
+    <div style="max-width:1200px;margin:0 auto;padding:28px 16px 40px;">
+      <div style="color:rgba(255,255,255,0.65);font-family:ui-monospace,monospace;font-size:13px;margin-bottom:18px;">
+        <a href="/knowledge-base" style="color:#00FF94;text-decoration:underline;">Knowledge Base</a>
+        <span style="margin:0 10px;color:rgba(255,255,255,0.35);">/</span>
+        <span style="color:rgba(255,255,255,0.9);">${esc(categorySafe)}</span>
+      </div>
+      <h1 style="color:#fff;font-size:36px;font-weight:900;margin:0 0 18px;">${esc(categorySafe)}</h1>
+      ${articlesSafe.length === 0
+        ? `<p style="color:rgba(255,255,255,0.6);">No articles in this category.</p>`
+        : `<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;">${cardsHtml}</ul>`
+      }
+    </div>
+  `;
+%>
+
+<%- include('layout', { body: bodyHtml, title, description, siteName, nav, footer, palette, currentPath, canonical, jsonLd }) %>
+
